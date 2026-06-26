@@ -19,6 +19,9 @@
             --row-bg: #2d2d2d;
             --text-color: #ffffff;
             --border-color: #444444;
+            --settings-button-color: #4a9d6f;
+            --team1-row-bg: #2d2d2d;
+            --team2-row-bg: #2d2d2d;
         }
 
         body {
@@ -39,7 +42,7 @@
             position: fixed;
             top: 15px;
             right: 15px;
-            background: var(--accent-color);
+            background: var(--settings-button-color);
             color: white;
             border: none;
             padding: 10px 15px;
@@ -171,8 +174,16 @@
             transition: all 0.3s ease;
         }
 
+        .team-row.team1 {
+            background: var(--team1-row-bg);
+        }
+
+        .team-row.team2 {
+            background: var(--team2-row-bg);
+        }
+
         .team-row:hover {
-            background: #3a3a3a;
+            opacity: 0.9;
         }
 
         .team-row.serving {
@@ -499,6 +510,16 @@
         </div>
 
         <div class="setting-group">
+            <label>Team 1 Row Color:</label>
+            <input type="color" id="team1RowBg" value="#2d2d2d" onchange="updateColors()">
+        </div>
+
+        <div class="setting-group">
+            <label>Team 2 Row Color:</label>
+            <input type="color" id="team2RowBg" value="#2d2d2d" onchange="updateColors()">
+        </div>
+
+        <div class="setting-group">
             <label>Team 1 Logo:</label>
             <input type="file" id="team1ImageInput" accept="image/*" onchange="handleTeamImageUpload(1)">
             <img id="team1ImagePreview" class="team-image-preview" alt="Team 1 Logo Preview" style="margin-top: 10px; display: none; width: 100%; max-width: 100px; border-radius: 50%;" />
@@ -599,6 +620,8 @@
             accentColor: '#4a9d6f',
             darkBg: '#1a1a1a',
             rowBg: '#2d2d2d',
+            team1RowBg: '#2d2d2d',
+            team2RowBg: '#2d2d2d',
             showScoreControls: false,
             winningScore: 11,
             deuceRule: 'winBy2',
@@ -647,6 +670,8 @@
             settings.accentColor = document.getElementById('accentColor').value;
             settings.darkBg = document.getElementById('darkBg').value;
             settings.rowBg = document.getElementById('rowBg').value;
+            settings.team1RowBg = document.getElementById('team1RowBg').value;
+            settings.team2RowBg = document.getElementById('team2RowBg').value;
             applySettings();
             saveSettings();
         }
@@ -656,11 +681,15 @@
             document.documentElement.style.setProperty('--accent-color', settings.accentColor);
             document.documentElement.style.setProperty('--dark-bg', settings.darkBg);
             document.documentElement.style.setProperty('--row-bg', settings.rowBg);
+            document.documentElement.style.setProperty('--team1-row-bg', settings.team1RowBg);
+            document.documentElement.style.setProperty('--team2-row-bg', settings.team2RowBg);
             
             document.getElementById('headerBg').value = settings.headerBg;
             document.getElementById('accentColor').value = settings.accentColor;
             document.getElementById('darkBg').value = settings.darkBg;
             document.getElementById('rowBg').value = settings.rowBg;
+            document.getElementById('team1RowBg').value = settings.team1RowBg;
+            document.getElementById('team2RowBg').value = settings.team2RowBg;
             document.getElementById('tournamentTitle').value = settings.tournamentTitle;
             document.getElementById('tournamentSubtitle').value = settings.tournamentSubtitle;
             document.getElementById('showScoreControls').checked = settings.showScoreControls;
@@ -829,6 +858,8 @@
             settings.accentColor = '#4a9d6f';
             settings.darkBg = '#1a1a1a';
             settings.rowBg = '#2d2d2d';
+            settings.team1RowBg = '#2d2d2d';
+            settings.team2RowBg = '#2d2d2d';
             applySettings();
             saveSettings();
         }
@@ -929,7 +960,7 @@
             const numSets = gameState.team1.scores.length;
 
             const team1Won = checkWinner(1);
-            html += `<div class="team-row ${gameState.serving === 1 ? 'serving' : ''} ${team1Won ? 'winner' : ''}">`;
+            html += `<div class="team-row team1 ${gameState.serving === 1 ? 'serving' : ''} ${team1Won ? 'winner' : ''}">`;
             html += `<div class="team-name" onclick="editTeamName(1)">`;
             if (gameState.serving === 1) {
                 html += `<span class="serving-logo"></span>`;
@@ -955,7 +986,7 @@
             html += `</div>`;
 
             const team2Won = checkWinner(2);
-            html += `<div class="team-row ${gameState.serving === 2 ? 'serving' : ''} ${team2Won ? 'winner' : ''}">`;
+            html += `<div class="team-row team2 ${gameState.serving === 2 ? 'serving' : ''} ${team2Won ? 'winner' : ''}">`;
             html += `<div class="team-name" onclick="editTeamName(2)">`;
             if (gameState.serving === 2) {
                 html += `<span class="serving-logo"></span>`;
