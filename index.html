@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball Tournament Scoreboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --header-bg: #2a4a3a;
+            --accent-color: #4a9d6f;
+            --dark-bg: #1a1a1a;
+            --row-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --border-color: #444444;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--dark-bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.fullscreen-mode {
+            padding: 0;
+        }
+
+        .settings-toggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            z-index: 100;
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--row-bg);
+            border-left: 2px solid var(--accent-color);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 200;
+            transition: right 0.3s ease;
+            color: var(--text-color);
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-panel h2 {
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+
+        .settings-panel h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .setting-group input[type="color"],
+        .setting-group input[type="text"],
+        .setting-group input[type="number"],
+        .setting-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.9em;
+            background: var(--dark-bg);
+            color: var(--text-color);
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            padding: 0;
+            height: 8px;
+        }
+
+        .close-settings {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--accent-color);
+        }
+
+        .container {
+            background: var(--dark-bg);
+            border-radius: 0;
+            padding: 0;
+            width: 100%;
+            max-width: 1000px;
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--header-bg);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .tournament-title {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        .tournament-subtitle {
+            font-size: 1em;
+            color: #aaa;
+            letter-spacing: 1px;
+        }
+
+        .scoreboard-wrapper {
+            padding: 20px;
+        }
+
+        .team-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            background: var(--row-bg);
+            margin-bottom: 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .team-row:hover {
+            background: #3a3a3a;
+        }
+
+        .team-row.serving {
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 10px rgba(74, 157, 111, 0.3);
+        }
+
+        .team-row.winner {
+            border: 3px solid #FFD700;
+            background: rgba(255, 215, 0, 0.1) !important;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .winner-badge {
+            display: inline-block;
+            background: #FFD700;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .team-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: var(--text-color);
+            cursor: pointer;
+            user-select: none;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-name:hover {
+            color: var(--accent-color);
+        }
+
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+        }
+
+        .team-logo-placeholder {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--accent-color);
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .serving-logo {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-color: #4a9d6f;
+            border-radius: 50%;
+            animation: bounce 0.6s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .score-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .score-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--accent-color);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--dark-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .score-value:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(74, 157, 111, 0.3);
+        }
+
+        .score-label {
+            font-size: 0.8em;
+            color: #888;
+            text-align: center;
+            width: 60px;
+        }
+
+        .score-controls {
+            display: none;
+        }
+
+        .btn-add, .btn-remove {
+            padding: 5px 10px;
+            font-size: 0.8em;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add:hover {
+            background: #5ab97d;
+        }
+
+        .btn-remove:hover {
+            background: #3a8d5f;
+        }
+
+        .btn-add:active, .btn-remove:active {
+            transform: scale(0.95);
+        }
+
+        .score-controls-section {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            padding: 15px 0;
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .team-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .team-controls-label {
+            font-size: 1em;
+            font-weight: bold;
+            color: var(--text-color);
+            min-width: 120px;
+        }
+
+        .team-controls-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            padding: 20px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn-reset, .btn-serving, .btn-undo, .btn-add-set {
+            padding: 10px 20px;
+            font-size: 0.95em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-save {
+            background-color: #FFD700;
+            color: #000;
+        }
+
+        .btn-save:hover {
+            background-color: #FFC700;
+        }
+
+        .btn-add-set {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-add-set:hover {
+            background-color: #5ab97d;
+        }
+
+        .btn-reset {
+            background-color: #c23030;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #e84e3f;
+        }
+
+        .btn-serving {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-serving:hover {
+            background-color: #5ab97d;
+        }
+
+        .btn-undo {
+            background-color: #6c5ce7;
+            color: white;
+        }
+
+        .btn-undo:hover {
+            background-color: #7d7dd6;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 15px;
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 900px) {
+            .team-row {
+                grid-template-columns: 1fr auto auto;
+            }
+
+            .team-name {
+                min-width: 150px;
+                font-size: 1.1em;
+            }
+
+            .score-value {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+
+            .score-label {
+                width: 50px;
+                font-size: 0.75em;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .team-row {
+                grid-template-columns: 1fr auto;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .team-name {
+                font-size: 1em;
+                min-width: 120px;
+            }
+
+            .tournament-title {
+                font-size: 1.5em;
+            }
+
+            .tournament-subtitle {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-panel" id="settingsPanel">
+        <button class="close-settings" onclick="toggleSettings()">✕</button>
+        <h2>⚙️ Settings</h2>
+
+        <div class="setting-group">
+            <label>Tournament Title:</label>
+            <input type="text" id="tournamentTitle" placeholder="Enter tournament name" onchange="saveTournamentInfo()">
+        </div>
+
+        <div class="setting-group">
+            <label>Tournament Subtitle:</label>
+            <input type="text" id="tournamentSubtitle" placeholder="Enter event details" onchange="saveTournamentInfo()">
+        </div>
+
+        <div class="setting-group">
+            <label>Header Background:</label>
+            <input type="color" id="headerBg" value="#2a4a3a" onchange="updateColors()">
+        </div>
+
+        <div class="setting-group">
+            <label>Accent Color:</label>
+            <input type="color" id="accentColor" value="#4a9d6f" onchange="updateColors()">
+        </div>
+
+        <div class="setting-group">
+            <label>Dark Background:</label>
+            <input type="color" id="darkBg" value="#1a1a1a" onchange="updateColors()">
+        </div>
+
+        <div class="setting-group">
+            <label>Row Background:</label>
+            <input type="color" id="rowBg" value="#2d2d2d" onchange="updateColors()">
+        </div>
+
+        <div class="setting-group">
+            <label>Team 1 Logo:</label>
+            <input type="file" id="team1ImageInput" accept="image/*" onchange="handleTeamImageUpload(1)">
+            <img id="team1ImagePreview" class="team-image-preview" alt="Team 1 Logo Preview" style="margin-top: 10px; display: none; width: 100%; max-width: 100px; border-radius: 50%;" />
+            <button type="button" class="btn-remove" onclick="removeTeamImage(1)" style="margin-top: 10px; width: 100%;">Remove Logo</button>
+        </div>
+
+        <div class="setting-group">
+            <label>Team 2 Logo:</label>
+            <input type="file" id="team2ImageInput" accept="image/*" onchange="handleTeamImageUpload(2)">
+            <img id="team2ImagePreview" class="team-image-preview" alt="Team 2 Logo Preview" style="margin-top: 10px; display: none; width: 100%; max-width: 100px; border-radius: 50%;" />
+            <button type="button" class="btn-remove" onclick="removeTeamImage(2)" style="margin-top: 10px; width: 100%;">Remove Logo</button>
+        </div>
+
+        <div class="setting-group">
+            <label>
+                <input type="checkbox" id="showScoreControls" onchange="toggleScoreControls()">
+                Show +/− Buttons
+            </label>
+        </div>
+
+        <div class="setting-group">
+            <label>Winning Score:</label>
+            <select id="winningScore" onchange="updateGameSettings()">
+                <option value="11">11</option>
+                <option value="15">15</option>
+                <option value="21">21</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <label>Match Rules:</label>
+            <select id="deuceRule" onchange="updateGameSettings()">
+                <option value="noDeuce">No Deuce (Win by exact score)</option>
+                <option value="winBy2">Win by 2 (Traditional Deuce)</option>
+            </select>
+        </div>
+
+        <button onclick="resetColors()" style="width: 100%; padding: 10px; background: #6c5ce7; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px;">🔄 Reset to Default Colors</button>
+
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
+        <h3>Keyboard Shortcuts</h3>
+        <small style="color: #888; line-height: 1.8;">
+            <strong>1</strong> - Team 1 +1<br>
+            <strong>2</strong> - Team 2 +1<br>
+            <strong>Q</strong> - Team 1 -1<br>
+            <strong>W</strong> - Team 2 -1<br>
+            <strong>S</strong> - Toggle Serving<br>
+            <strong>A</strong> - Add Set<br>
+            <strong>U</strong> - Undo<br>
+            <strong>R</strong> - Reset<br>
+            <strong>F</strong> - Fullscreen
+        </small>
+    </div>
+
+    <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+
+    <div class="container" id="container">
+        <div class="header">
+            <div class="tournament-title" id="tournamentTitle">PICKLEBALL TOURNAMENT</div>
+            <div class="tournament-subtitle" id="tournamentSubtitle">Championship Match</div>
+        </div>
+
+        <div class="scoreboard-wrapper">
+            <div id="scoreboardContent">
+                <!-- Generated by JavaScript -->
+            </div>
+
+            <div id="scoreControlsSection">
+                <!-- Score controls generated by JavaScript -->
+            </div>
+
+            <div class="controls">
+                <button class="btn-undo" onclick="undo()">↶ Undo</button>
+                <button class="btn-serving" onclick="toggleServing()">🎯 Toggle Serving</button>
+                <button class="btn-add-set" onclick="addSet()">+ Add Set</button>
+                <button class="btn-save" onclick="saveMatchToExcel()">💾 Save Match</button>
+                <button class="btn-reset" onclick="resetGame()">🔄 Reset</button>
+            </div>
+
+            <div class="keyboard-hint">
+                💡 Use keyboard shortcuts: <strong>1/2</strong> for points, <strong>S</strong> to serve, <strong>A</strong> to add set
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            team1: { name: 'TEAM 1', scores: [0] },
+            team2: { name: 'TEAM 2', scores: [0] },
+            serving: 1,
+            history: []
+        };
+
+        let settings = {
+            tournamentTitle: 'PICKLEBALL TOURNAMENT',
+            tournamentSubtitle: 'Championship Match',
+            headerBg: '#2a4a3a',
+            accentColor: '#4a9d6f',
+            darkBg: '#1a1a1a',
+            rowBg: '#2d2d2d',
+            showScoreControls: false,
+            winningScore: 11,
+            deuceRule: 'winBy2',
+            team1Image: null,
+            team2Image: null
+        };
+
+        function loadSettings() {
+            const saved = localStorage.getItem('tournament-scoreboard-settings');
+            if (saved) {
+                try {
+                    settings = JSON.parse(saved);
+                    applySettings();
+                } catch (e) {
+                    console.error('Failed to load settings:', e);
+                }
+            }
+        }
+
+        function saveSettings() {
+            localStorage.setItem('tournament-scoreboard-settings', JSON.stringify(settings));
+        }
+
+        function loadGameState() {
+            const saved = localStorage.getItem('tournament-scoreboard-game');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load game state:', e);
+                }
+            }
+        }
+
+        function saveGameState() {
+            localStorage.setItem('tournament-scoreboard-game', JSON.stringify(gameState));
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('open');
+        }
+
+        function updateColors() {
+            settings.headerBg = document.getElementById('headerBg').value;
+            settings.accentColor = document.getElementById('accentColor').value;
+            settings.darkBg = document.getElementById('darkBg').value;
+            settings.rowBg = document.getElementById('rowBg').value;
+            applySettings();
+            saveSettings();
+        }
+
+        function applySettings() {
+            document.documentElement.style.setProperty('--header-bg', settings.headerBg);
+            document.documentElement.style.setProperty('--accent-color', settings.accentColor);
+            document.documentElement.style.setProperty('--dark-bg', settings.darkBg);
+            document.documentElement.style.setProperty('--row-bg', settings.rowBg);
+            
+            document.getElementById('headerBg').value = settings.headerBg;
+            document.getElementById('accentColor').value = settings.accentColor;
+            document.getElementById('darkBg').value = settings.darkBg;
+            document.getElementById('rowBg').value = settings.rowBg;
+            document.getElementById('tournamentTitle').value = settings.tournamentTitle;
+            document.getElementById('tournamentSubtitle').value = settings.tournamentSubtitle;
+            document.getElementById('showScoreControls').checked = settings.showScoreControls;
+            document.getElementById('winningScore').value = settings.winningScore;
+            document.getElementById('deuceRule').value = settings.deuceRule;
+
+            updateTeamImagePreview(1);
+            updateTeamImagePreview(2);
+            
+            // Apply score controls visibility
+            const controls = document.querySelectorAll('.score-controls');
+            controls.forEach(el => el.classList.toggle('hidden', !settings.showScoreControls));
+        }
+
+        function updateTeamImagePreview(team) {
+            const preview = document.getElementById(`team${team}ImagePreview`);
+            const imageData = team === 1 ? settings.team1Image : settings.team2Image;
+            if (preview) {
+                if (imageData) {
+                    preview.src = imageData;
+                    preview.style.display = 'block';
+                } else {
+                    preview.src = '';
+                    preview.style.display = 'none';
+                }
+            }
+        }
+
+        function handleTeamImageUpload(team) {
+            const input = document.getElementById(`team${team}ImageInput`);
+            if (!input || !input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageData = event.target.result;
+                if (team === 1) {
+                    settings.team1Image = imageData;
+                } else {
+                    settings.team2Image = imageData;
+                }
+                saveSettings();
+                applySettings();
+                updateDisplay();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getTeamLogoHtml(team, teamName) {
+            const imageData = team === 1 ? settings.team1Image : settings.team2Image;
+            if (imageData) {
+                return `<img src="${imageData}" alt="Team ${team} Logo" class="team-logo">`;
+            }
+            const initials = teamName.split(' ').map(word => word[0]).join('').slice(0, 2);
+            return `<span class="team-logo-placeholder">${initials}</span>`;
+        }
+
+        function removeTeamImage(team) {
+            if (team === 1) {
+                settings.team1Image = null;
+                document.getElementById('team1ImageInput').value = '';
+            } else {
+                settings.team2Image = null;
+                document.getElementById('team2ImageInput').value = '';
+            }
+            saveSettings();
+            applySettings();
+            updateDisplay();
+        }
+
+        function saveTournamentInfo() {
+            settings.tournamentTitle = document.getElementById('tournamentTitle').value;
+            settings.tournamentSubtitle = document.getElementById('tournamentSubtitle').value;
+            updateDisplay();
+            saveSettings();
+        }
+
+        function toggleScoreControls() {
+            settings.showScoreControls = document.getElementById('showScoreControls').checked;
+            const controls = document.querySelectorAll('.score-controls');
+            controls.forEach(el => el.classList.toggle('hidden', !settings.showScoreControls));
+            saveSettings();
+        }
+
+        function updateGameSettings() {
+            settings.winningScore = parseInt(document.getElementById('winningScore').value);
+            settings.deuceRule = document.getElementById('deuceRule').value;
+            updateDisplay();
+            saveSettings();
+        }
+
+        function checkWinner(team) {
+            const setIndex = gameState.team1.scores.length - 1;
+            const team1Score = gameState.team1.scores[setIndex];
+            const team2Score = gameState.team2.scores[setIndex];
+            
+            if (settings.deuceRule === 'noDeuce') {
+                // No deuce: first to reach winning score wins
+                if (team === 1) {
+                    return team1Score >= settings.winningScore && team1Score > team2Score;
+                } else {
+                    return team2Score >= settings.winningScore && team2Score > team1Score;
+                }
+            } else {
+                // Win by 2: need to reach winning score AND be ahead by 2
+                if (team === 1) {
+                    return team1Score >= settings.winningScore && (team1Score - team2Score) >= 2;
+                } else {
+                    return team2Score >= settings.winningScore && (team2Score - team1Score) >= 2;
+                }
+            }
+        }
+
+        function saveMatchToExcel() {
+            // Prepare data for Excel
+            const currentDate = new Date().toLocaleString();
+            const setIndex = gameState.team1.scores.length - 1;
+            const team1Won = checkWinner(1);
+            const team2Won = checkWinner(2);
+            const winner = team1Won ? gameState.team1.name : (team2Won ? gameState.team2.name : 'In Progress');
+            const deuceRuleText = settings.deuceRule === 'noDeuce' ? 'No Deuce' : 'Win by 2';
+
+            // Create worksheet data
+            const data = [
+                ['MATCH SUMMARY'],
+                [],
+                ['Tournament', settings.tournamentTitle],
+                ['Event', settings.tournamentSubtitle],
+                ['Date/Time', currentDate],
+                [],
+                ['MATCH SETTINGS'],
+                ['Winning Score', settings.winningScore],
+                ['Rules', deuceRuleText],
+                [],
+                ['MATCH RESULTS'],
+                ['Team', 'Final Score', 'Status'],
+                [gameState.team1.name, gameState.team1.scores[setIndex], team1Won ? 'WINNER' : (team2Won ? 'LOSS' : 'In Progress')],
+                [gameState.team2.name, gameState.team2.scores[setIndex], team2Won ? 'WINNER' : (team1Won ? 'LOSS' : 'In Progress')],
+                [],
+                ['SCORE BREAKDOWN BY SET'],
+                ['Set #', gameState.team1.name, gameState.team2.name]
+            ];
+
+            // Add scores for each set
+            for (let i = 0; i < gameState.team1.scores.length; i++) {
+                data.push([`Set ${i + 1}`, gameState.team1.scores[i], gameState.team2.scores[i]]);
+            }
+
+            // Create workbook and worksheet
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Match Results');
+
+            // Style the worksheet (set column widths)
+            ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }];
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `Pickleball_Match_${timestamp}.xlsx`;
+
+            // Save the file
+            XLSX.writeFile(wb, filename);
+        }
+
+        function resetColors() {
+            settings.headerBg = '#2a4a3a';
+            settings.accentColor = '#4a9d6f';
+            settings.darkBg = '#1a1a1a';
+            settings.rowBg = '#2d2d2d';
+            applySettings();
+            saveSettings();
+        }
+
+        function saveState() {
+            gameState.history.push({
+                team1Scores: [...gameState.team1.scores],
+                team2Scores: [...gameState.team2.scores],
+                serving: gameState.serving
+            });
+            saveGameState();
+        }
+
+        function addScore(team) {
+            saveState();
+            const setIndex = gameState.team1.scores.length - 1;
+            if (team === 1) {
+                gameState.team1.scores[setIndex]++;
+            } else {
+                gameState.team2.scores[setIndex]++;
+            }
+            updateDisplay();
+            saveGameState();
+        }
+
+        function subtractScore(team) {
+            saveState();
+            const setIndex = gameState.team1.scores.length - 1;
+            if (team === 1) {
+                if (gameState.team1.scores[setIndex] > 0) gameState.team1.scores[setIndex]--;
+            } else {
+                if (gameState.team2.scores[setIndex] > 0) gameState.team2.scores[setIndex]--;
+            }
+            updateDisplay();
+            saveGameState();
+        }
+
+        function toggleServing() {
+            saveState();
+            gameState.serving = gameState.serving === 1 ? 2 : 1;
+            updateDisplay();
+            saveGameState();
+        }
+
+        function addSet() {
+            saveState();
+            gameState.team1.scores.push(0);
+            gameState.team2.scores.push(0);
+            updateDisplay();
+            saveGameState();
+        }
+
+        function undo() {
+            if (gameState.history.length > 0) {
+                const previousState = gameState.history.pop();
+                gameState.team1.scores = previousState.team1Scores;
+                gameState.team2.scores = previousState.team2Scores;
+                gameState.serving = previousState.serving;
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        function resetGame() {
+            if (confirm('Are you sure you want to reset the game?')) {
+                gameState = {
+                    team1: { name: gameState.team1.name, scores: [0] },
+                    team2: { name: gameState.team2.name, scores: [0] },
+                    serving: 1,
+                    history: []
+                };
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        function editTeamName(team) {
+            const currentName = team === 1 ? gameState.team1.name : gameState.team2.name;
+            const newName = prompt('Enter team name:', currentName);
+            if (newName && newName.trim()) {
+                if (team === 1) {
+                    gameState.team1.name = newName.trim().toUpperCase();
+                } else {
+                    gameState.team2.name = newName.trim().toUpperCase();
+                }
+                updateDisplay();
+                saveGameState();
+            }
+        }
+
+        function updateDisplay() {
+            // Update tournament title
+            document.querySelector('.tournament-title').textContent = settings.tournamentTitle;
+            document.querySelector('.tournament-subtitle').textContent = settings.tournamentSubtitle;
+
+            // Build scoreboard
+            let html = '';
+            const numSets = gameState.team1.scores.length;
+
+            const team1Won = checkWinner(1);
+            html += `<div class="team-row ${gameState.serving === 1 ? 'serving' : ''} ${team1Won ? 'winner' : ''}">`;
+            html += `<div class="team-name" onclick="editTeamName(1)">`;
+            if (gameState.serving === 1) {
+                html += `<span class="serving-logo"></span>`;
+            }
+            html += getTeamLogoHtml(1, gameState.team1.name);
+            html += `${gameState.team1.name}`;
+            if (team1Won) {
+                html += `<span class="winner-badge">WINNER</span>`;
+            }
+            html += `</div>`;
+            
+            for (let i = 0; i < numSets; i++) {
+                html += `
+                    <div class="score-column">
+                        <div class="score-value" onclick="addScore(1)">${gameState.team1.scores[i]}</div>
+                        <div class="score-controls">
+                            <button class="btn-add" onclick="addScore(1)">+</button>
+                            <button class="btn-remove" onclick="subtractScore(1)">−</button>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+
+            const team2Won = checkWinner(2);
+            html += `<div class="team-row ${gameState.serving === 2 ? 'serving' : ''} ${team2Won ? 'winner' : ''}">`;
+            html += `<div class="team-name" onclick="editTeamName(2)">`;
+            if (gameState.serving === 2) {
+                html += `<span class="serving-logo"></span>`;
+            }
+            html += getTeamLogoHtml(2, gameState.team2.name);
+            html += `${gameState.team2.name}`;
+            if (team2Won) {
+                html += `<span class="winner-badge">WINNER</span>`;
+            }
+            html += `</div>`;
+            
+            for (let i = 0; i < numSets; i++) {
+                html += `
+                    <div class="score-column">
+                        <div class="score-value" onclick="addScore(2)">${gameState.team2.scores[i]}</div>
+                        <div class="score-controls">
+                            <button class="btn-add" onclick="addScore(2)">+</button>
+                            <button class="btn-remove" onclick="subtractScore(2)">−</button>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `</div>`;
+
+            document.getElementById('scoreboardContent').innerHTML = html;
+
+            // Build score controls section
+            let controlsHtml = '<div class="score-controls-section">';
+            
+            // Team 1 controls
+            controlsHtml += `<div class="team-controls-label">${gameState.team1.name}</div>`;
+            controlsHtml += '<div class="team-controls-buttons">';
+            for (let i = 0; i < numSets; i++) {
+                controlsHtml += `
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn-add" onclick="addScore(1)" style="padding: 8px 12px;">+</button>
+                        <button class="btn-remove" onclick="subtractScore(1)" style="padding: 8px 12px;">−</button>
+                    </div>
+                `;
+            }
+            controlsHtml += '</div>';
+
+            // Team 2 controls
+            controlsHtml += `<div class="team-controls-label">${gameState.team2.name}</div>`;
+            controlsHtml += '<div class="team-controls-buttons">';
+            for (let i = 0; i < numSets; i++) {
+                controlsHtml += `
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn-add" onclick="addScore(2)" style="padding: 8px 12px;">+</button>
+                        <button class="btn-remove" onclick="subtractScore(2)" style="padding: 8px 12px;">−</button>
+                    </div>
+                `;
+            }
+            controlsHtml += '</div>';
+            
+            controlsHtml += '</div>';
+            document.getElementById('scoreControlsSection').innerHTML = controlsHtml;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            const key = event.key.toLowerCase();
+            
+            // Disable shortcuts when typing in input fields
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                return;
+            }
+            
+            if (['1', '2', 'q', 'w', 's', 'a', 'u', 'r', 'f'].includes(key)) {
+                event.preventDefault();
+            }
+            
+            switch(key) {
+                case '1':
+                    addScore(1);
+                    break;
+                case '2':
+                    addScore(2);
+                    break;
+                case 'q':
+                    subtractScore(1);
+                    break;
+                case 'w':
+                    subtractScore(2);
+                    break;
+                case 's':
+                    toggleServing();
+                    break;
+                case 'a':
+                    addSet();
+                    break;
+                case 'u':
+                    undo();
+                    break;
+                case 'r':
+                    resetGame();
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'escape':
+                    if (document.fullscreenElement) {
+                        toggleFullscreen();
+                    }
+                    break;
+            }
+        });
+
+        function toggleFullscreen() {
+            const container = document.getElementById('container');
+            const body = document.body;
+            
+            if (!document.fullscreenElement) {
+                container.classList.add('fullscreen-mode');
+                body.classList.add('fullscreen-mode');
+                if (container.requestFullscreen) {
+                    container.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                }
+            } else {
+                container.classList.remove('fullscreen-mode');
+                body.classList.remove('fullscreen-mode');
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            loadSettings();
+            loadGameState();
+            applySettings();
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
