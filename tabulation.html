@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball Score Tabulation</title>
+    <style>
+        :root {
+            --court: #f6f8f3;
+            --panel: #ffffff;
+            --ink: #17211c;
+            --muted: #637169;
+            --line: #d9e1dc;
+            --green: #287a55;
+            --green-dark: #1f5f43;
+            --blue: #2463a6;
+            --gold: #d99a18;
+            --red: #bf3e35;
+            --shadow: 0 14px 40px rgba(23, 33, 28, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--ink);
+            background:
+                linear-gradient(90deg, rgba(40, 122, 85, 0.09) 1px, transparent 1px),
+                linear-gradient(rgba(40, 122, 85, 0.09) 1px, transparent 1px),
+                var(--court);
+            background-size: 44px 44px;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 28px));
+            margin: 22px auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: clamp(1.7rem, 3vw, 2.7rem);
+            letter-spacing: 0;
+        }
+
+        .title-block p {
+            margin: 5px 0 0;
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn {
+            min-height: 40px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #ffffff;
+            background: var(--green);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--green-dark);
+        }
+
+        .btn.secondary {
+            color: var(--ink);
+            background: #e8eee9;
+        }
+
+        .btn.secondary:hover {
+            background: #dce6df;
+        }
+
+        .btn.danger {
+            background: var(--red);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(280px, 380px) 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            background: #fbfcfa;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .form {
+            display: grid;
+            gap: 13px;
+            padding: 16px;
+        }
+
+        .field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .field label {
+            color: var(--muted);
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 40px;
+            padding: 9px 10px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            color: var(--ink);
+            background: #ffffff;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .score-input {
+            font-size: 1.25rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .notice {
+            padding: 10px 12px;
+            border: 1px solid #efd89f;
+            border-radius: 6px;
+            color: #6f4a00;
+            background: #fff7df;
+            font-size: 0.92rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            border-bottom: 1px solid var(--line);
+            background: #fbfcfa;
+        }
+
+        .tab {
+            padding: 9px 13px;
+            border-radius: 6px;
+            color: var(--muted);
+            background: transparent;
+            font-weight: 800;
+        }
+
+        .tab.active {
+            color: #ffffff;
+            background: var(--green);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .stat {
+            padding: 14px 16px;
+            border-right: 1px solid var(--line);
+        }
+
+        .stat:last-child {
+            border-right: 0;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 1.6rem;
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 720px;
+        }
+
+        th,
+        td {
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            color: var(--muted);
+            background: #fbfcfa;
+            font-size: 0.78rem;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        td.number,
+        th.number {
+            text-align: right;
+        }
+
+        tbody tr:hover {
+            background: #f7faf7;
+        }
+
+        .rank {
+            display: inline-flex;
+            width: 28px;
+            height: 28px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #ffffff;
+            background: var(--blue);
+            font-weight: 800;
+        }
+
+        .winner {
+            color: var(--green-dark);
+            font-weight: 800;
+        }
+
+        .table-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            min-width: 34px;
+            min-height: 34px;
+            border-radius: 6px;
+            color: var(--ink);
+            background: #eef3ef;
+            font-weight: 800;
+        }
+
+        .icon-btn:hover {
+            background: #dfe9e2;
+        }
+
+        .icon-btn.delete {
+            color: #ffffff;
+            background: var(--red);
+        }
+
+        .empty {
+            padding: 28px 18px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #694300;
+            background: #fff0c4;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        @media (max-width: 900px) {
+            .layout,
+            .topbar {
+                grid-template-columns: 1fr;
+                display: grid;
+            }
+
+            .actions {
+                justify-content: start;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .shell {
+                width: min(100% - 18px, 1180px);
+                margin-top: 10px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat {
+                border-right: 0;
+            }
+
+            .actions .btn {
+                flex: 1 1 140px;
+            }
+        }
+
+        @media print {
+            body {
+                background: #ffffff;
+            }
+
+            .shell {
+                width: 100%;
+                margin: 0;
+            }
+
+            .actions,
+            .form-panel,
+            .tabs,
+            .table-actions,
+            .icon-btn {
+                display: none !important;
+            }
+
+            .layout {
+                display: block;
+            }
+
+            .panel {
+                box-shadow: none;
+                border: 0;
+            }
+
+            .tab-panel {
+                display: block;
+                page-break-inside: avoid;
+            }
+
+            table {
+                min-width: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="title-block">
+                <h1>Pickleball Score Tabulation</h1>
+                <p>Record match results, rank teams, and export the tournament table.</p>
+            </div>
+            <div class="actions">
+                <button class="btn secondary" type="button" onclick="window.print()">Print</button>
+                <button class="btn secondary" type="button" onclick="exportCsv()">Export CSV</button>
+                <button class="btn danger" type="button" onclick="clearAll()">Clear All</button>
+            </div>
+        </header>
+
+        <section class="layout">
+            <aside class="panel form-panel">
+                <div class="panel-header">
+                    <h2>Add Match Result</h2>
+                    <span class="badge" id="matchCountBadge">0 matches</span>
+                </div>
+
+                <form class="form" id="matchForm">
+                    <div class="field">
+                        <label for="division">Division / Bracket</label>
+                        <input id="division" name="division" type="text" value="Open Division" autocomplete="off">
+                    </div>
+
+                    <div class="field">
+                        <label for="round">Round</label>
+                        <input id="round" name="round" type="text" placeholder="Round 1, Semifinal, Finals" autocomplete="off">
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="teamA">Team A</label>
+                            <input id="teamA" name="teamA" type="text" placeholder="Team or player name" required autocomplete="off">
+                        </div>
+                        <div class="field">
+                            <label for="teamB">Team B</label>
+                            <input id="teamB" name="teamB" type="text" placeholder="Team or player name" required autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="field">
+                            <label for="scoreA">Team A Score</label>
+                            <input class="score-input" id="scoreA" name="scoreA" type="number" min="0" value="0" required>
+                        </div>
+                        <div class="field">
+                            <label for="scoreB">Team B Score</label>
+                            <input class="score-input" id="scoreB" name="scoreB" type="number" min="0" value="0" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="court">Court</label>
+                        <input id="court" name="court" type="text" placeholder="Court 1" autocomplete="off">
+                    </div>
+
+                    <div class="notice" id="formNotice">Winning team is calculated from the higher score.</div>
+
+                    <button class="btn" type="submit" id="submitButton">Add Result</button>
+                    <button class="btn secondary" type="button" id="cancelEditButton" onclick="cancelEdit()" hidden>Cancel Edit</button>
+                </form>
+            </aside>
+
+            <section class="panel">
+                <div class="tabs" role="tablist" aria-label="Score tables">
+                    <button class="tab active" type="button" data-tab="standings" onclick="showTab('standings')">Standings</button>
+                    <button class="tab" type="button" data-tab="matches" onclick="showTab('matches')">Match Log</button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <strong id="totalMatches">0</strong>
+                        <span>Matches</span>
+                    </div>
+                    <div class="stat">
+                        <strong id="totalTeams">0</strong>
+                        <span>Teams</span>
+                    </div>
+                    <div class="stat">
+                        <strong id="topTeam">-</strong>
+                        <span>Top Team</span>
+                    </div>
+                    <div class="stat">
+                        <strong id="totalPoints">0</strong>
+                        <span>Total Points</span>
+                    </div>
+                </div>
+
+                <div class="tab-panel active" id="standingsPanel">
+                    <div class="table-wrap">
+                        <table aria-label="Tournament standings">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Team</th>
+                                    <th class="number">Played</th>
+                                    <th class="number">Wins</th>
+                                    <th class="number">Losses</th>
+                                    <th class="number">Points For</th>
+                                    <th class="number">Points Against</th>
+                                    <th class="number">Diff</th>
+                                    <th class="number">Win %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="standingsBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty" id="standingsEmpty">No results yet. Add a completed match to build the standings.</div>
+                </div>
+
+                <div class="tab-panel" id="matchesPanel">
+                    <div class="table-wrap">
+                        <table aria-label="Match results">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Division</th>
+                                    <th>Round</th>
+                                    <th>Teams</th>
+                                    <th class="number">Score</th>
+                                    <th>Winner</th>
+                                    <th>Court</th>
+                                    <th class="number">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matchesBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty" id="matchesEmpty">No match results have been recorded.</div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script>
+        const storageKey = 'pickleball-tabulation-results';
+        const form = document.getElementById('matchForm');
+        let matches = [];
+        let editingId = null;
+
+        function loadMatches() {
+            try {
+                matches = JSON.parse(localStorage.getItem(storageKey)) || [];
+            } catch (error) {
+                matches = [];
+            }
+        }
+
+        function saveMatches() {
+            localStorage.setItem(storageKey, JSON.stringify(matches));
+        }
+
+        function normalizeName(value) {
+            return value.trim().replace(/\s+/g, ' ');
+        }
+
+        function getFormMatch() {
+            const teamA = normalizeName(form.teamA.value);
+            const teamB = normalizeName(form.teamB.value);
+            const scoreA = Number(form.scoreA.value);
+            const scoreB = Number(form.scoreB.value);
+
+            if (!teamA || !teamB) {
+                throw new Error('Enter both team names.');
+            }
+
+            if (teamA.toLowerCase() === teamB.toLowerCase()) {
+                throw new Error('Teams must be different.');
+            }
+
+            if (!Number.isFinite(scoreA) || !Number.isFinite(scoreB) || scoreA < 0 || scoreB < 0) {
+                throw new Error('Scores must be zero or higher.');
+            }
+
+            if (scoreA === scoreB) {
+                throw new Error('Pickleball results need a winner. Scores cannot be tied.');
+            }
+
+            return {
+                id: editingId || Date.now().toString(),
+                division: normalizeName(form.division.value) || 'Open Division',
+                round: normalizeName(form.round.value) || '-',
+                teamA,
+                teamB,
+                scoreA,
+                scoreB,
+                court: normalizeName(form.court.value) || '-',
+                createdAt: editingId ? matches.find(match => match.id === editingId)?.createdAt || new Date().toISOString() : new Date().toISOString()
+            };
+        }
+
+        function getWinner(match) {
+            return match.scoreA > match.scoreB ? match.teamA : match.teamB;
+        }
+
+        function buildStandings() {
+            const teams = new Map();
+
+            function ensureTeam(name) {
+                if (!teams.has(name)) {
+                    teams.set(name, {
+                        team: name,
+                        played: 0,
+                        wins: 0,
+                        losses: 0,
+                        pointsFor: 0,
+                        pointsAgainst: 0
+                    });
+                }
+                return teams.get(name);
+            }
+
+            matches.forEach(match => {
+                const a = ensureTeam(match.teamA);
+                const b = ensureTeam(match.teamB);
+                const aWon = match.scoreA > match.scoreB;
+
+                a.played += 1;
+                b.played += 1;
+                a.wins += aWon ? 1 : 0;
+                b.wins += aWon ? 0 : 1;
+                a.losses += aWon ? 0 : 1;
+                b.losses += aWon ? 1 : 0;
+                a.pointsFor += match.scoreA;
+                a.pointsAgainst += match.scoreB;
+                b.pointsFor += match.scoreB;
+                b.pointsAgainst += match.scoreA;
+            });
+
+            return Array.from(teams.values())
+                .map(team => ({
+                    ...team,
+                    diff: team.pointsFor - team.pointsAgainst,
+                    winRate: team.played ? team.wins / team.played : 0
+                }))
+                .sort((a, b) =>
+                    b.wins - a.wins ||
+                    b.winRate - a.winRate ||
+                    b.diff - a.diff ||
+                    b.pointsFor - a.pointsFor ||
+                    a.team.localeCompare(b.team)
+                );
+        }
+
+        function renderStandings(standings) {
+            const body = document.getElementById('standingsBody');
+            const empty = document.getElementById('standingsEmpty');
+            body.innerHTML = '';
+            empty.hidden = standings.length > 0;
+
+            standings.forEach((team, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="rank">${index + 1}</span></td>
+                    <td><strong>${escapeHtml(team.team)}</strong></td>
+                    <td class="number">${team.played}</td>
+                    <td class="number">${team.wins}</td>
+                    <td class="number">${team.losses}</td>
+                    <td class="number">${team.pointsFor}</td>
+                    <td class="number">${team.pointsAgainst}</td>
+                    <td class="number">${team.diff > 0 ? '+' : ''}${team.diff}</td>
+                    <td class="number">${Math.round(team.winRate * 100)}%</td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        function renderMatches() {
+            const body = document.getElementById('matchesBody');
+            const empty = document.getElementById('matchesEmpty');
+            body.innerHTML = '';
+            empty.hidden = matches.length > 0;
+
+            matches.forEach((match, index) => {
+                const winner = getWinner(match);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(match.division)}</td>
+                    <td>${escapeHtml(match.round)}</td>
+                    <td>${escapeHtml(match.teamA)} vs ${escapeHtml(match.teamB)}</td>
+                    <td class="number"><strong>${match.scoreA} - ${match.scoreB}</strong></td>
+                    <td class="winner">${escapeHtml(winner)}</td>
+                    <td>${escapeHtml(match.court)}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="icon-btn" type="button" title="Edit match" onclick="editMatch('${match.id}')">Edit</button>
+                            <button class="icon-btn delete" type="button" title="Delete match" onclick="deleteMatch('${match.id}')">Del</button>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        function renderStats(standings) {
+            const totalPoints = matches.reduce((sum, match) => sum + match.scoreA + match.scoreB, 0);
+            document.getElementById('totalMatches').textContent = matches.length;
+            document.getElementById('totalTeams').textContent = standings.length;
+            document.getElementById('topTeam').textContent = standings[0]?.team || '-';
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('matchCountBadge').textContent = `${matches.length} ${matches.length === 1 ? 'match' : 'matches'}`;
+        }
+
+        function render() {
+            const standings = buildStandings();
+            renderStats(standings);
+            renderStandings(standings);
+            renderMatches();
+        }
+
+        function resetForm() {
+            form.reset();
+            form.division.value = 'Open Division';
+            form.scoreA.value = 0;
+            form.scoreB.value = 0;
+            editingId = null;
+            document.getElementById('submitButton').textContent = 'Add Result';
+            document.getElementById('cancelEditButton').hidden = true;
+            document.getElementById('formNotice').textContent = 'Winning team is calculated from the higher score.';
+        }
+
+        function cancelEdit() {
+            resetForm();
+        }
+
+        function editMatch(id) {
+            const match = matches.find(item => item.id === id);
+            if (!match) return;
+
+            editingId = id;
+            form.division.value = match.division;
+            form.round.value = match.round === '-' ? '' : match.round;
+            form.teamA.value = match.teamA;
+            form.teamB.value = match.teamB;
+            form.scoreA.value = match.scoreA;
+            form.scoreB.value = match.scoreB;
+            form.court.value = match.court === '-' ? '' : match.court;
+            document.getElementById('submitButton').textContent = 'Update Result';
+            document.getElementById('cancelEditButton').hidden = false;
+            document.getElementById('formNotice').textContent = 'Editing an existing result.';
+            form.teamA.focus();
+        }
+
+        function deleteMatch(id) {
+            if (!confirm('Delete this match result?')) return;
+            matches = matches.filter(match => match.id !== id);
+            saveMatches();
+            if (editingId === id) resetForm();
+            render();
+        }
+
+        function clearAll() {
+            if (!matches.length) return;
+            if (!confirm('Clear all saved match results?')) return;
+            matches = [];
+            saveMatches();
+            resetForm();
+            render();
+        }
+
+        function showTab(name) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === name);
+            });
+            document.getElementById('standingsPanel').classList.toggle('active', name === 'standings');
+            document.getElementById('matchesPanel').classList.toggle('active', name === 'matches');
+        }
+
+        function csvCell(value) {
+            return `"${String(value).replace(/"/g, '""')}"`;
+        }
+
+        function exportCsv() {
+            const standings = buildStandings();
+            const rows = [
+                ['STANDINGS'],
+                ['Rank', 'Team', 'Played', 'Wins', 'Losses', 'Points For', 'Points Against', 'Diff', 'Win %'],
+                ...standings.map((team, index) => [
+                    index + 1,
+                    team.team,
+                    team.played,
+                    team.wins,
+                    team.losses,
+                    team.pointsFor,
+                    team.pointsAgainst,
+                    team.diff,
+                    `${Math.round(team.winRate * 100)}%`
+                ]),
+                [],
+                ['MATCH LOG'],
+                ['#', 'Division', 'Round', 'Team A', 'Score A', 'Team B', 'Score B', 'Winner', 'Court'],
+                ...matches.map((match, index) => [
+                    index + 1,
+                    match.division,
+                    match.round,
+                    match.teamA,
+                    match.scoreA,
+                    match.teamB,
+                    match.scoreB,
+                    getWinner(match),
+                    match.court
+                ])
+            ];
+
+            const csv = rows.map(row => row.map(csvCell).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `pickleball-tabulation-${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            try {
+                const match = getFormMatch();
+                if (editingId) {
+                    matches = matches.map(item => item.id === editingId ? match : item);
+                } else {
+                    matches.push(match);
+                }
+                saveMatches();
+                resetForm();
+                render();
+            } catch (error) {
+                document.getElementById('formNotice').textContent = error.message;
+            }
+        });
+
+        loadMatches();
+        resetForm();
+        render();
+    </script>
+</body>
+</html>
