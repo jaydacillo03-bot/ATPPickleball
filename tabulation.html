@@ -111,6 +111,11 @@
             align-items: start;
         }
 
+        .side-stack {
+            display: grid;
+            gap: 16px;
+        }
+
         .panel {
             background: var(--panel);
             border: 1px solid var(--line);
@@ -333,6 +338,42 @@
             font-weight: 800;
         }
 
+        .bracket-row td {
+            color: var(--green-dark);
+            background: #eef6f1;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .team-list {
+            display: grid;
+            gap: 8px;
+            padding: 0 16px 16px;
+        }
+
+        .team-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .team-item:last-child {
+            border-bottom: 0;
+        }
+
+        .team-item strong,
+        .team-item span {
+            display: block;
+        }
+
+        .team-item span {
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
         @media (max-width: 900px) {
             .layout,
             .topbar {
@@ -425,60 +466,91 @@
         </header>
 
         <section class="layout">
-            <aside class="panel form-panel">
-                <div class="panel-header">
-                    <h2>Add Match Result</h2>
-                    <span class="badge" id="matchCountBadge">0 matches</span>
-                </div>
-
-                <form class="form" id="matchForm">
-                    <div class="field">
-                        <label for="division">Division / Bracket</label>
-                        <input id="division" name="division" type="text" value="Open Division" autocomplete="off">
+            <aside class="side-stack form-panel">
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2>Add Team</h2>
+                        <span class="badge" id="teamCountBadge">0 teams</span>
                     </div>
 
-                    <div class="field">
-                        <label for="round">Round</label>
-                        <input id="round" name="round" type="text" placeholder="Round 1, Semifinal, Finals" autocomplete="off">
-                    </div>
-
-                    <div class="grid-2">
+                    <form class="form" id="teamForm">
                         <div class="field">
-                            <label for="teamA">Team A</label>
-                            <input id="teamA" name="teamA" type="text" placeholder="Team or player name" required autocomplete="off">
+                            <label for="teamName">Team Name</label>
+                            <input id="teamName" name="teamName" type="text" placeholder="Team or player name" required autocomplete="off">
                         </div>
+
                         <div class="field">
-                            <label for="teamB">Team B</label>
-                            <input id="teamB" name="teamB" type="text" placeholder="Team or player name" required autocomplete="off">
+                            <label for="teamDivision">Division / Bracket</label>
+                            <input id="teamDivision" name="teamDivision" type="text" value="Open Division" list="bracketOptions" required autocomplete="off">
                         </div>
+
+                        <div class="notice" id="teamNotice">Create the tournament team list by bracket.</div>
+                        <button class="btn" type="submit">Add Team</button>
+                    </form>
+
+                    <div class="team-list" id="teamList"></div>
+                    <div class="empty" id="teamsEmpty">No teams have been added yet.</div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2>Add Match Result</h2>
+                        <span class="badge" id="matchCountBadge">0 matches</span>
                     </div>
 
-                    <div class="grid-2">
+                    <form class="form" id="matchForm">
                         <div class="field">
-                            <label for="scoreA">Team A Score</label>
-                            <input class="score-input" id="scoreA" name="scoreA" type="number" min="0" value="0" required>
+                            <label for="division">Division / Bracket</label>
+                            <input id="division" name="division" type="text" value="Open Division" list="bracketOptions" autocomplete="off">
                         </div>
+
                         <div class="field">
-                            <label for="scoreB">Team B Score</label>
-                            <input class="score-input" id="scoreB" name="scoreB" type="number" min="0" value="0" required>
+                            <label for="round">Round</label>
+                            <input id="round" name="round" type="text" placeholder="Round 1, Semifinal, Finals" autocomplete="off">
                         </div>
-                    </div>
 
-                    <div class="field">
-                        <label for="court">Court</label>
-                        <input id="court" name="court" type="text" placeholder="Court 1" autocomplete="off">
-                    </div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="teamA">Team A</label>
+                                <input id="teamA" name="teamA" type="text" placeholder="Team or player name" list="teamOptions" required autocomplete="off">
+                            </div>
+                            <div class="field">
+                                <label for="teamB">Team B</label>
+                                <input id="teamB" name="teamB" type="text" placeholder="Team or player name" list="teamOptions" required autocomplete="off">
+                            </div>
+                        </div>
 
-                    <div class="notice" id="formNotice">Winning team is calculated from the higher score.</div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="scoreA">Team A Score</label>
+                                <input class="score-input" id="scoreA" name="scoreA" type="number" min="0" value="0" required>
+                            </div>
+                            <div class="field">
+                                <label for="scoreB">Team B Score</label>
+                                <input class="score-input" id="scoreB" name="scoreB" type="number" min="0" value="0" required>
+                            </div>
+                        </div>
 
-                    <button class="btn" type="submit" id="submitButton">Add Result</button>
-                    <button class="btn secondary" type="button" id="cancelEditButton" onclick="cancelEdit()" hidden>Cancel Edit</button>
-                </form>
+                        <div class="field">
+                            <label for="court">Court</label>
+                            <input id="court" name="court" type="text" placeholder="Court 1" autocomplete="off">
+                        </div>
+
+                        <div class="notice" id="formNotice">Winning team is calculated from the higher score.</div>
+
+                        <button class="btn" type="submit" id="submitButton">Add Result</button>
+                        <button class="btn secondary" type="button" id="cancelEditButton" onclick="cancelEdit()" hidden>Cancel Edit</button>
+                    </form>
+                </section>
+
+                <datalist id="teamOptions"></datalist>
+                <datalist id="bracketOptions"></datalist>
             </aside>
 
             <section class="panel">
                 <div class="tabs" role="tablist" aria-label="Score tables">
                     <button class="tab active" type="button" data-tab="standings" onclick="showTab('standings')">Standings</button>
+                    <button class="tab" type="button" data-tab="teams" onclick="showTab('teams')">Teams</button>
                     <button class="tab" type="button" data-tab="matches" onclick="showTab('matches')">Match Log</button>
                 </div>
 
@@ -520,7 +592,24 @@
                             <tbody id="standingsBody"></tbody>
                         </table>
                     </div>
-                    <div class="empty" id="standingsEmpty">No results yet. Add a completed match to build the standings.</div>
+                    <div class="empty" id="standingsEmpty">No teams or match results yet. Add teams or completed matches to build the standings.</div>
+                </div>
+
+                <div class="tab-panel" id="teamsPanel">
+                    <div class="table-wrap">
+                        <table aria-label="Registered teams">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Team</th>
+                                    <th>Division / Bracket</th>
+                                    <th class="number">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamsBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty" id="teamsTabEmpty">No teams have been registered.</div>
                 </div>
 
                 <div class="tab-panel" id="matchesPanel">
@@ -549,8 +638,11 @@
 
     <script>
         const storageKey = 'pickleball-tabulation-results';
+        const teamsStorageKey = 'pickleball-tabulation-teams';
         const form = document.getElementById('matchForm');
+        const teamForm = document.getElementById('teamForm');
         let matches = [];
+        let teams = [];
         let editingId = null;
 
         function loadMatches() {
@@ -563,6 +655,18 @@
 
         function saveMatches() {
             localStorage.setItem(storageKey, JSON.stringify(matches));
+        }
+
+        function loadTeams() {
+            try {
+                teams = JSON.parse(localStorage.getItem(teamsStorageKey)) || [];
+            } catch (error) {
+                teams = [];
+            }
+        }
+
+        function saveTeams() {
+            localStorage.setItem(teamsStorageKey, JSON.stringify(teams));
         }
 
         function normalizeName(value) {
@@ -608,12 +712,22 @@
             return match.scoreA > match.scoreB ? match.teamA : match.teamB;
         }
 
-        function buildStandings() {
-            const teams = new Map();
+        function buildBracketStandings() {
+            const brackets = new Map();
 
-            function ensureTeam(name) {
-                if (!teams.has(name)) {
-                    teams.set(name, {
+            function ensureBracket(division) {
+                if (!brackets.has(division)) {
+                    brackets.set(division, new Map());
+                }
+                return brackets.get(division);
+            }
+
+            function ensureTeam(division, name) {
+                const bracketTeams = ensureBracket(division);
+                const teamKey = name.toLowerCase();
+                if (!bracketTeams.has(teamKey)) {
+                    bracketTeams.set(teamKey, {
+                        division,
                         team: name,
                         played: 0,
                         wins: 0,
@@ -622,12 +736,17 @@
                         pointsAgainst: 0
                     });
                 }
-                return teams.get(name);
+                return bracketTeams.get(teamKey);
             }
 
+            teams.forEach(team => {
+                ensureTeam(team.division, team.name);
+            });
+
             matches.forEach(match => {
-                const a = ensureTeam(match.teamA);
-                const b = ensureTeam(match.teamB);
+                const division = match.division || 'Open Division';
+                const a = ensureTeam(division, match.teamA);
+                const b = ensureTeam(division, match.teamB);
                 const aWon = match.scoreA > match.scoreB;
 
                 a.played += 1;
@@ -642,42 +761,161 @@
                 b.pointsAgainst += match.scoreA;
             });
 
-            return Array.from(teams.values())
-                .map(team => ({
-                    ...team,
-                    diff: team.pointsFor - team.pointsAgainst,
-                    winRate: team.played ? team.wins / team.played : 0
+            return Array.from(brackets.entries())
+                .map(([division, bracketTeams]) => ({
+                    division,
+                    standings: Array.from(bracketTeams.values())
+                        .map(team => ({
+                            ...team,
+                            diff: team.pointsFor - team.pointsAgainst,
+                            winRate: team.played ? team.wins / team.played : 0
+                        }))
+                        .sort((a, b) =>
+                            b.wins - a.wins ||
+                            b.winRate - a.winRate ||
+                            b.diff - a.diff ||
+                            b.pointsFor - a.pointsFor ||
+                            a.team.localeCompare(b.team)
+                        )
                 }))
-                .sort((a, b) =>
-                    b.wins - a.wins ||
-                    b.winRate - a.winRate ||
-                    b.diff - a.diff ||
-                    b.pointsFor - a.pointsFor ||
-                    a.team.localeCompare(b.team)
-                );
+                .sort((a, b) => a.division.localeCompare(b.division));
         }
 
-        function renderStandings(standings) {
+        function flattenStandings(groups) {
+            return groups.flatMap(group => group.standings);
+        }
+
+        function getTeamList() {
+            const teamMap = new Map();
+
+            function addTeam(name, division, id = null) {
+                const normalizedName = normalizeName(name || '');
+                const normalizedDivision = normalizeName(division || '') || 'Open Division';
+                if (!normalizedName) return;
+
+                const key = `${normalizedDivision.toLowerCase()}|${normalizedName.toLowerCase()}`;
+                const existing = teamMap.get(key);
+                teamMap.set(key, {
+                    id: existing?.id || id,
+                    name: existing?.name || normalizedName,
+                    division: existing?.division || normalizedDivision,
+                    registered: Boolean(existing?.registered || id)
+                });
+            }
+
+            teams.forEach(team => addTeam(team.name, team.division, team.id));
+            matches.forEach(match => {
+                addTeam(match.teamA, match.division);
+                addTeam(match.teamB, match.division);
+            });
+
+            return Array.from(teamMap.values()).sort((a, b) =>
+                a.division.localeCompare(b.division) ||
+                a.name.localeCompare(b.name)
+            );
+        }
+
+        function renderStandings(groups) {
             const body = document.getElementById('standingsBody');
             const empty = document.getElementById('standingsEmpty');
             body.innerHTML = '';
-            empty.hidden = standings.length > 0;
+            empty.hidden = groups.length > 0;
 
-            standings.forEach((team, index) => {
+            groups.forEach(group => {
+                const bracketRow = document.createElement('tr');
+                bracketRow.className = 'bracket-row';
+                bracketRow.innerHTML = `<td colspan="9">${escapeHtml(group.division)}</td>`;
+                body.appendChild(bracketRow);
+
+                group.standings.forEach((team, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><span class="rank">${index + 1}</span></td>
+                        <td><strong>${escapeHtml(team.team)}</strong></td>
+                        <td class="number">${team.played}</td>
+                        <td class="number">${team.wins}</td>
+                        <td class="number">${team.losses}</td>
+                        <td class="number">${team.pointsFor}</td>
+                        <td class="number">${team.pointsAgainst}</td>
+                        <td class="number">${team.diff > 0 ? '+' : ''}${team.diff}</td>
+                        <td class="number">${Math.round(team.winRate * 100)}%</td>
+                    `;
+                    body.appendChild(row);
+                });
+            });
+        }
+
+        function renderTeams() {
+            const list = document.getElementById('teamList');
+            const listEmpty = document.getElementById('teamsEmpty');
+            const tableBody = document.getElementById('teamsBody');
+            const tableEmpty = document.getElementById('teamsTabEmpty');
+            const teamList = getTeamList();
+            list.innerHTML = '';
+            tableBody.innerHTML = '';
+            listEmpty.hidden = teams.length > 0;
+            tableEmpty.hidden = teamList.length > 0;
+
+            const sortedTeams = [...teams].sort((a, b) =>
+                a.division.localeCompare(b.division) ||
+                a.name.localeCompare(b.name)
+            );
+
+            sortedTeams.forEach(team => {
+                const item = document.createElement('div');
+                item.className = 'team-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${escapeHtml(team.name)}</strong>
+                        <span>${escapeHtml(team.division)}</span>
+                    </div>
+                    <button class="icon-btn delete" type="button" title="Delete team" onclick="deleteTeam('${team.id}')">Del</button>
+                `;
+                list.appendChild(item);
+            });
+
+            teamList.forEach((team, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td><span class="rank">${index + 1}</span></td>
-                    <td><strong>${escapeHtml(team.team)}</strong></td>
-                    <td class="number">${team.played}</td>
-                    <td class="number">${team.wins}</td>
-                    <td class="number">${team.losses}</td>
-                    <td class="number">${team.pointsFor}</td>
-                    <td class="number">${team.pointsAgainst}</td>
-                    <td class="number">${team.diff > 0 ? '+' : ''}${team.diff}</td>
-                    <td class="number">${Math.round(team.winRate * 100)}%</td>
+                    <td>${index + 1}</td>
+                    <td><strong>${escapeHtml(team.name)}</strong></td>
+                    <td>${escapeHtml(team.division)}</td>
+                    <td>
+                        <div class="table-actions">
+                            ${team.registered ? `<button class="icon-btn delete" type="button" title="Delete team" onclick="deleteTeam('${team.id}')">Del</button>` : '<span class="badge">Match log</span>'}
+                        </div>
+                    </td>
                 `;
-                body.appendChild(row);
+                tableBody.appendChild(row);
             });
+        }
+
+        function renderDatalists() {
+            const teamOptions = document.getElementById('teamOptions');
+            const bracketOptions = document.getElementById('bracketOptions');
+            const teamNames = new Set();
+            const bracketNames = new Set(['Open Division']);
+
+            teams.forEach(team => {
+                teamNames.add(team.name);
+                bracketNames.add(team.division);
+            });
+
+            matches.forEach(match => {
+                teamNames.add(match.teamA);
+                teamNames.add(match.teamB);
+                bracketNames.add(match.division || 'Open Division');
+            });
+
+            teamOptions.innerHTML = Array.from(teamNames)
+                .sort((a, b) => a.localeCompare(b))
+                .map(name => `<option value="${escapeHtml(name)}"></option>`)
+                .join('');
+
+            bracketOptions.innerHTML = Array.from(bracketNames)
+                .sort((a, b) => a.localeCompare(b))
+                .map(name => `<option value="${escapeHtml(name)}"></option>`)
+                .join('');
         }
 
         function renderMatches() {
@@ -691,7 +929,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${escapeHtml(match.division)}</td>
+                    <td>${escapeHtml(match.division || 'Open Division')}</td>
                     <td>${escapeHtml(match.round)}</td>
                     <td>${escapeHtml(match.teamA)} vs ${escapeHtml(match.teamB)}</td>
                     <td class="number"><strong>${match.scoreA} - ${match.scoreB}</strong></td>
@@ -708,19 +946,30 @@
             });
         }
 
-        function renderStats(standings) {
+        function renderStats(groups) {
+            const standings = flattenStandings(groups);
+            const topStanding = [...standings].sort((a, b) =>
+                b.wins - a.wins ||
+                b.winRate - a.winRate ||
+                b.diff - a.diff ||
+                b.pointsFor - a.pointsFor ||
+                a.team.localeCompare(b.team)
+            )[0];
             const totalPoints = matches.reduce((sum, match) => sum + match.scoreA + match.scoreB, 0);
             document.getElementById('totalMatches').textContent = matches.length;
             document.getElementById('totalTeams').textContent = standings.length;
-            document.getElementById('topTeam').textContent = standings[0]?.team || '-';
+            document.getElementById('topTeam').textContent = topStanding?.team || '-';
             document.getElementById('totalPoints').textContent = totalPoints;
             document.getElementById('matchCountBadge').textContent = `${matches.length} ${matches.length === 1 ? 'match' : 'matches'}`;
+            document.getElementById('teamCountBadge').textContent = `${teams.length} ${teams.length === 1 ? 'team' : 'teams'}`;
         }
 
         function render() {
-            const standings = buildStandings();
-            renderStats(standings);
-            renderStandings(standings);
+            const groups = buildBracketStandings();
+            renderStats(groups);
+            renderStandings(groups);
+            renderTeams();
+            renderDatalists();
             renderMatches();
         }
 
@@ -733,6 +982,12 @@
             document.getElementById('submitButton').textContent = 'Add Result';
             document.getElementById('cancelEditButton').hidden = true;
             document.getElementById('formNotice').textContent = 'Winning team is calculated from the higher score.';
+        }
+
+        function resetTeamForm() {
+            teamForm.reset();
+            teamForm.teamDivision.value = 'Open Division';
+            document.getElementById('teamNotice').textContent = 'Create the tournament team list by bracket.';
         }
 
         function cancelEdit() {
@@ -765,12 +1020,24 @@
             render();
         }
 
+        function deleteTeam(id) {
+            const team = teams.find(item => item.id === id);
+            if (!team) return;
+            if (!confirm(`Delete ${team.name} from ${team.division}? Match results will stay saved.`)) return;
+            teams = teams.filter(item => item.id !== id);
+            saveTeams();
+            render();
+        }
+
         function clearAll() {
-            if (!matches.length) return;
-            if (!confirm('Clear all saved match results?')) return;
+            if (!matches.length && !teams.length) return;
+            if (!confirm('Clear all saved teams and match results?')) return;
             matches = [];
+            teams = [];
             saveMatches();
+            saveTeams();
             resetForm();
+            resetTeamForm();
             render();
         }
 
@@ -779,6 +1046,7 @@
                 tab.classList.toggle('active', tab.dataset.tab === name);
             });
             document.getElementById('standingsPanel').classList.toggle('active', name === 'standings');
+            document.getElementById('teamsPanel').classList.toggle('active', name === 'teams');
             document.getElementById('matchesPanel').classList.toggle('active', name === 'matches');
         }
 
@@ -787,11 +1055,12 @@
         }
 
         function exportCsv() {
-            const standings = buildStandings();
+            const groups = buildBracketStandings();
             const rows = [
                 ['STANDINGS'],
-                ['Rank', 'Team', 'Played', 'Wins', 'Losses', 'Points For', 'Points Against', 'Diff', 'Win %'],
-                ...standings.map((team, index) => [
+                ['Bracket', 'Rank', 'Team', 'Played', 'Wins', 'Losses', 'Points For', 'Points Against', 'Diff', 'Win %'],
+                ...groups.flatMap(group => group.standings.map((team, index) => [
+                    group.division,
                     index + 1,
                     team.team,
                     team.played,
@@ -801,13 +1070,21 @@
                     team.pointsAgainst,
                     team.diff,
                     `${Math.round(team.winRate * 100)}%`
+                ])),
+                [],
+                ['TEAM LIST'],
+                ['#', 'Team', 'Bracket'],
+                ...getTeamList().map((team, index) => [
+                    index + 1,
+                    team.name,
+                    team.division
                 ]),
                 [],
                 ['MATCH LOG'],
                 ['#', 'Division', 'Round', 'Team A', 'Score A', 'Team B', 'Score B', 'Winner', 'Court'],
                 ...matches.map((match, index) => [
                     index + 1,
-                    match.division,
+                    match.division || 'Open Division',
                     match.round,
                     match.teamA,
                     match.scoreA,
@@ -854,8 +1131,43 @@
             }
         });
 
+        teamForm.addEventListener('submit', event => {
+            event.preventDefault();
+
+            const name = normalizeName(teamForm.teamName.value);
+            const division = normalizeName(teamForm.teamDivision.value) || 'Open Division';
+
+            if (!name) {
+                document.getElementById('teamNotice').textContent = 'Enter a team name.';
+                return;
+            }
+
+            const exists = teams.some(team =>
+                team.name.toLowerCase() === name.toLowerCase() &&
+                team.division.toLowerCase() === division.toLowerCase()
+            );
+
+            if (exists) {
+                document.getElementById('teamNotice').textContent = 'That team is already listed in this bracket.';
+                return;
+            }
+
+            teams.push({
+                id: Date.now().toString(),
+                name,
+                division,
+                createdAt: new Date().toISOString()
+            });
+            saveTeams();
+            resetTeamForm();
+            form.division.value = division;
+            render();
+        });
+
         loadMatches();
+        loadTeams();
         resetForm();
+        resetTeamForm();
         render();
     </script>
 </body>

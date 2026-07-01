@@ -503,6 +503,12 @@
         </div>
 
         <div class="setting-group">
+            <label>Division / Bracket:</label>
+            <input type="text" id="matchBracket" value="Open Division" list="bracketOptions" placeholder="Open Division" onchange="saveTournamentInfo()" onfocus="refreshTabulationOptions()">
+            <datalist id="bracketOptions"></datalist>
+        </div>
+
+        <div class="setting-group">
             <label>Header Background:</label>
             <input type="color" id="headerBg" value="#2a4a3a" onchange="updateColors()">
         </div>
@@ -640,6 +646,7 @@
             showScoreControls: false,
             winningScore: 11,
             deuceRule: 'winBy2',
+            matchBracket: 'Open Division',
             team1Image: null,
             team2Image: null
         };
@@ -648,7 +655,7 @@
             const saved = localStorage.getItem('tournament-scoreboard-settings');
             if (saved) {
                 try {
-                    settings = JSON.parse(saved);
+                    settings = { ...settings, ...JSON.parse(saved) };
                     applySettings();
                 } catch (e) {
                     console.error('Failed to load settings:', e);
@@ -707,9 +714,11 @@
             document.getElementById('team2RowBg').value = settings.team2RowBg;
             document.getElementById('tournamentTitle').value = settings.tournamentTitle;
             document.getElementById('tournamentSubtitle').value = settings.tournamentSubtitle;
+            document.getElementById('matchBracket').value = settings.matchBracket || 'Open Division';
             document.getElementById('showScoreControls').checked = settings.showScoreControls;
             document.getElementById('winningScore').value = settings.winningScore;
             document.getElementById('deuceRule').value = settings.deuceRule;
+            refreshTabulationOptions();
 
             updateTeamImagePreview(1);
             updateTeamImagePreview(2);
@@ -777,8 +786,57 @@
         function saveTournamentInfo() {
             settings.tournamentTitle = document.getElementById('tournamentTitle').value;
             settings.tournamentSubtitle = document.getElementById('tournamentSubtitle').value;
+            settings.matchBracket = normalizeName(document.getElementById('matchBracket').value) || 'Open Division';
+            document.getElementById('matchBracket').value = settings.matchBracket;
             updateDisplay();
             saveSettings();
+        }
+
+        function normalizeName(value) {
+            return String(value || '').trim().replace(/\s+/g, ' ');
+        }
+
+        function refreshTabulationOptions() {
+            const bracketOptions = document.getElementById('bracketOptions');
+            if (!bracketOptions) return;
+
+            const brackets = new Set(['Open Division']);
+
+            try {
+                const teams = JSON.parse(localStorage.getItem('pickleball-tabulation-teams')) || [];
+                teams.forEach(team => {
+                    if (team.division) brackets.add(team.division);
+                });
+            } catch (error) {
+                // Ignore malformed saved tabulation teams.
+            }
+
+            try {
+                const matches = JSON.parse(localStorage.getItem('pickleball-tabulation-results')) || [];
+                matches.forEach(match => {
+                    if (match.division) brackets.add(match.division);
+                });
+            } catch (error) {
+                // Ignore malformed saved tabulation matches.
+            }
+
+            if (settings.matchBracket) {
+                brackets.add(settings.matchBracket);
+            }
+
+            bracketOptions.innerHTML = Array.from(brackets)
+                .sort((a, b) => a.localeCompare(b))
+                .map(name => `<option value="${escapeHtml(name)}"></option>`)
+                .join('');
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         function toggleScoreControls() {
@@ -832,6 +890,7 @@
                 [],
                 ['Tournament', settings.tournamentTitle],
                 ['Event', settings.tournamentSubtitle],
+                ['Bracket', settings.matchBracket || 'Open Division'],
                 ['Date/Time', currentDate],
                 [],
                 ['MATCH SETTINGS'],
@@ -882,6 +941,7 @@
 
             const storageKey = 'pickleball-tabulation-results';
             let matches = [];
+            const division = settings.matchBracket || 'Open Division';
 
             try {
                 matches = JSON.parse(localStorage.getItem(storageKey)) || [];
@@ -891,7 +951,7 @@
 
             const match = {
                 id: Date.now().toString(),
-                division: settings.tournamentTitle || 'Open Division',
+                division,
                 round: settings.tournamentSubtitle || `Set ${setIndex + 1}`,
                 teamA: gameState.team1.name,
                 teamB: gameState.team2.name,
@@ -903,7 +963,7 @@
 
             matches.push(match);
             localStorage.setItem(storageKey, JSON.stringify(matches));
-            alert(`Saved to tabulation. Winner: ${team1Won ? gameState.team1.name : gameState.team2.name}`);
+            alert(`Saved to ${division}. Winner: ${team1Won ? gameState.team1.name : gameState.team2.name}`);
         }
 
         function resetColors() {
