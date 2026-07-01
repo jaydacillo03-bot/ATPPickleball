@@ -365,7 +365,10 @@
             border-top: 2px solid var(--border-color);
         }
 
-        .btn-reset, .btn-serving, .btn-undo, .btn-add-set {
+        .btn-reset, .btn-serving, .btn-undo, .btn-add-set, .btn-save, .btn-tabulation {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 10px 20px;
             font-size: 0.95em;
             border: none;
@@ -374,6 +377,7 @@
             font-weight: bold;
             transition: all 0.2s ease;
             text-transform: uppercase;
+            text-decoration: none;
         }
 
         .btn-save {
@@ -383,6 +387,15 @@
 
         .btn-save:hover {
             background-color: #FFC700;
+        }
+
+        .btn-tabulation {
+            background-color: #2463a6;
+            color: white;
+        }
+
+        .btn-tabulation:hover {
+            background-color: #2f75bd;
         }
 
         .btn-add-set {
@@ -596,6 +609,8 @@
                 <button class="btn-serving" onclick="toggleServing()">🎯 Toggle Serving</button>
                 <button class="btn-add-set" onclick="addSet()">+ Add Set</button>
                 <button class="btn-save" onclick="saveMatchToExcel()">💾 Save Match</button>
+                <button class="btn-tabulation" onclick="saveMatchToTabulation()">📊 Save to Tabulation</button>
+                <a class="btn-tabulation" href="tabulation.html">📊 Tabulation</a>
                 <button class="btn-reset" onclick="resetGame()">🔄 Reset</button>
             </div>
 
@@ -851,6 +866,44 @@
 
             // Save the file
             XLSX.writeFile(wb, filename);
+        }
+
+        function saveMatchToTabulation() {
+            const setIndex = gameState.team1.scores.length - 1;
+            const scoreA = gameState.team1.scores[setIndex];
+            const scoreB = gameState.team2.scores[setIndex];
+            const team1Won = checkWinner(1);
+            const team2Won = checkWinner(2);
+
+            if (!team1Won && !team2Won) {
+                alert('Finish the match first before saving it to tabulation.');
+                return;
+            }
+
+            const storageKey = 'pickleball-tabulation-results';
+            let matches = [];
+
+            try {
+                matches = JSON.parse(localStorage.getItem(storageKey)) || [];
+            } catch (error) {
+                matches = [];
+            }
+
+            const match = {
+                id: Date.now().toString(),
+                division: settings.tournamentTitle || 'Open Division',
+                round: settings.tournamentSubtitle || `Set ${setIndex + 1}`,
+                teamA: gameState.team1.name,
+                teamB: gameState.team2.name,
+                scoreA,
+                scoreB,
+                court: '-',
+                createdAt: new Date().toISOString()
+            };
+
+            matches.push(match);
+            localStorage.setItem(storageKey, JSON.stringify(matches));
+            alert(`Saved to tabulation. Winner: ${team1Won ? gameState.team1.name : gameState.team2.name}`);
         }
 
         function resetColors() {
