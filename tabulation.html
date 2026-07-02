@@ -645,16 +645,54 @@
         let teams = [];
         let editingId = null;
 
-        function loadMatches() {
+        async function loadMatches() {
             try {
-                matches = JSON.parse(localStorage.getItem(storageKey)) || [];
+                const response = await fetch('/api/tabulation/results');
+                if (!response.ok) throw new Error('Unable to load matches');
+                const rows = await response.json();
+                matches = rows.map(row => ({
+                    id: row.id,
+                    division: row.division,
+                    round: row.round,
+                    teamA: row.teamA,
+                    teamB: row.teamB,
+                    scoreA: row.scoreA,
+                    scoreB: row.scoreB,
+                    court: row.court,
+                    createdAt: row.createdAt,
+                    winner: row.winner
+                }));
             } catch (error) {
                 matches = [];
             }
         }
 
-        function saveMatches() {
-            localStorage.setItem(storageKey, JSON.stringify(matches));
+        async function saveMatches() {
+            const payload = matches.map(match => ({
+                id: match.id,
+                division: match.division,
+                round: match.round,
+                teamA: match.teamA,
+                teamB: match.teamB,
+                scoreA: match.scoreA,
+                scoreB: match.scoreB,
+                court: match.court,
+                createdAt: match.createdAt,
+                winner: match.winner || getWinner(match)
+            }));
+            localStorage.setItem(storageKey, JSON.stringify(payload));
+        }
+
+        async function persistMatchToDatabase(match) {
+            const payload = {
+                ...match,
+                winner: getWinner(match)
+            };
+            await fetch('/api/tabulation/results', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         }
 
         function loadTeams() {
@@ -1113,7 +1151,7 @@
                 .replace(/'/g, '&#039;');
         }
 
-        form.addEventListener('submit', event => {
+        form.addEventListener('submit', async event => {
             event.preventDefault();
 
             try {
@@ -1123,7 +1161,8 @@
                 } else {
                     matches.push(match);
                 }
-                saveMatches();
+                await persistMatchToDatabase(match);
+                await saveMatches();
                 resetForm();
                 render();
             } catch (error) {
@@ -1164,11 +1203,15 @@
             render();
         });
 
-        loadMatches();
-        loadTeams();
-        resetForm();
-        resetTeamForm();
-        render();
+        async function initializeTabulation() {
+            await loadMatches();
+            loadTeams();
+            resetForm();
+            resetTeamForm();
+            render();
+        }
+
+        initializeTabulation();
     </script>
 </body>
 </html>
