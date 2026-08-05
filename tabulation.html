@@ -551,7 +551,6 @@
                 </section>
 
                 <datalist id="teamOptions"></datalist>
-                <datalist id="bracketOptions"></datalist>
             </aside>
 
             <section class="panel">
@@ -652,7 +651,21 @@
         let teams = [];
         let editingId = null;
 
+        function loadMatchesFromLocalStorage() {
+            try {
+                return JSON.parse(localStorage.getItem(storageKey)) || [];
+            } catch (error) {
+                return [];
+            }
+        }
+
         async function loadMatches() {
+            const localMatches = loadMatchesFromLocalStorage();
+            if (localMatches.length) {
+                matches = localMatches;
+                return;
+            }
+
             try {
                 const response = await fetch('/api/tabulation/results');
                 if (!response.ok) throw new Error('Unable to load matches');
@@ -673,6 +686,19 @@
                 matches = [];
             }
         }
+
+        window.addEventListener('storage', function(event) {
+            if (event.storageArea !== localStorage) return;
+            if (event.key === storageKey || event.key === null) {
+                matches = loadMatchesFromLocalStorage();
+            }
+            if (event.key === teamsStorageKey || event.key === null) {
+                loadTeams();
+            }
+            if (event.key === storageKey || event.key === teamsStorageKey || event.key === null) {
+                render();
+            }
+        });
 
         async function saveMatches() {
             const payload = matches.map(match => ({
@@ -695,11 +721,20 @@
                 ...match,
                 winner: getWinner(match)
             };
-            await fetch('/api/tabulation/results', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+
+            try {
+                const response = await fetch('/api/tabulation/results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}`);
+                }
+            } catch (error) {
+                console.warn('Could not persist match to API. Falling back to local storage.', error);
+            }
         }
 
         function loadTeams() {
@@ -939,7 +974,7 @@
             const teamOptions = document.getElementById('teamOptions');
             const bracketOptions = document.getElementById('bracketOptions');
             const teamNames = new Set();
-            const bracketNames = new Set(['Open Division']);
+            const bracketNames = new Set(['Open Division', 'Bracket A', 'Bracket B', 'Bracket C', 'Bracket D']);
 
             teams.forEach(team => {
                 teamNames.add(team.name);

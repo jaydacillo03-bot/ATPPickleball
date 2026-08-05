@@ -505,7 +505,13 @@
         <div class="setting-group">
             <label>Division / Bracket:</label>
             <input type="text" id="matchBracket" value="Open Division" list="bracketOptions" placeholder="Open Division" onchange="saveTournamentInfo()" onfocus="refreshTabulationOptions()">
-            <datalist id="bracketOptions"></datalist>
+            <datalist id="bracketOptions">
+                <option value="Open Division"></option>
+                <option value="Bracket A"></option>
+                <option value="Bracket B"></option>
+                <option value="Bracket C"></option>
+                <option value="Bracket D"></option>
+            </datalist>
         </div>
 
         <div class="setting-group">
@@ -616,7 +622,7 @@
                 <button class="btn-add-set" onclick="addSet()">+ Add Set</button>
                 <button class="btn-save" onclick="saveMatchToExcel()">💾 Save Match</button>
                 <button class="btn-tabulation" onclick="saveMatchToTabulation()">📊 Save to Tabulation</button>
-                <a class="btn-tabulation" href="tabulation.html">📊 Tabulation</a>
+                <a class="btn-tabulation" href="tabulation.html" target="_blank" rel="noopener noreferrer">📊 Tabulation</a>
                 <button class="btn-reset" onclick="resetGame()">🔄 Reset</button>
             </div>
 
@@ -800,7 +806,7 @@
             const bracketOptions = document.getElementById('bracketOptions');
             if (!bracketOptions) return;
 
-            const brackets = new Set(['Open Division']);
+            const brackets = new Set(['Open Division', 'Bracket A', 'Bracket B', 'Bracket C', 'Bracket D']);
 
             try {
                 const teams = JSON.parse(localStorage.getItem('pickleball-tabulation-teams')) || [];
@@ -963,8 +969,18 @@
 
             matches.push(match);
             localStorage.setItem(storageKey, JSON.stringify(matches));
+            refreshTabulationOptions();
             alert(`Saved to ${division}. Winner: ${team1Won ? gameState.team1.name : gameState.team2.name}`);
         }
+
+        function handleTabulationStorageEvent(event) {
+            if (event.storageArea !== localStorage) return;
+            if (event.key === 'pickleball-tabulation-results' || event.key === 'pickleball-tabulation-teams' || event.key === null) {
+                refreshTabulationOptions();
+            }
+        }
+
+        window.addEventListener('storage', handleTabulationStorageEvent);
 
         function resetColors() {
             settings.headerBg = '#2a4a3a';
