@@ -621,7 +621,6 @@
                         <input id="scoreBInput" type="number" min="0" placeholder="0" style="width:60px;padding:6px;margin-right:6px;border-radius:4px;border:1px solid #444;background:transparent;color:#fff;">
                         <button onclick="sendTestUpdate()" style="padding:6px 10px;border-radius:4px;background:var(--accent-color);border:none;color:#000;font-weight:bold;cursor:pointer;margin-right:6px;">Send</button>
                         <button id="demoBtn" onclick="toggleTestDemo()" style="padding:6px 10px;border-radius:4px;background:#6c5ce7;border:none;color:#fff;cursor:pointer;">Demo</button>
-                        <div id="testSenderStatus" style="margin-top:8px;font-size:0.9em;color:#000;display:inline-block;padding:6px 10px;border-radius:6px;background:transparent;min-width:120px;text-align:center;">&nbsp;</div>
                     </div>
                 </div>
             </div>
@@ -1280,33 +1279,17 @@
             el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
         }
 
-        function showStatus(message, success) {
-            const el = document.getElementById('testSenderStatus');
-            if (!el) return;
-            el.textContent = message;
-            el.style.background = success ? 'rgba(144,238,144,0.9)' : 'rgba(255,182,193,0.95)';
-            el.style.color = success ? '#033' : '#300';
-            setTimeout(() => { el.style.background = 'transparent'; el.textContent = '\u00A0'; }, 3000);
-        }
-
         function connectAndSend(wsUrl, payload, onSent) {
             try {
-                showStatus('Connecting...', true);
                 const ws = new WebSocket(wsUrl);
                 ws.addEventListener('open', () => {
-                    try {
-                        ws.send(JSON.stringify(payload));
-                        showStatus('Sent', true);
-                        if (onSent) onSent();
-                    } catch (e) {
-                        showStatus('Send failed', false);
-                    } finally {
-                        ws.close();
-                    }
+                    ws.send(JSON.stringify(payload));
+                    if (onSent) onSent();
+                    ws.close();
                 });
-                ws.addEventListener('error', (e) => { showStatus('WS error', false); });
+                ws.addEventListener('error', (e) => { alert('WebSocket error: ' + e.message); });
             } catch (e) {
-                showStatus('Connect failed', false);
+                alert('Failed to connect to WebSocket: ' + e.message);
             }
         }
 
@@ -1323,7 +1306,6 @@
                 // Open overlay tab with query params if no ws provided
                 const url = `overlay/obs_scoreboard.html?overlay=1&teamAName=${encodeURIComponent(teamA)}&teamBName=${encodeURIComponent(teamB)}&scoreA=${scoreA}&scoreB=${scoreB}`;
                 window.open(url, '_blank');
-                showStatus('Opened overlay', true);
             }
         }
 
