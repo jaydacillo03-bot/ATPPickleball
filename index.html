@@ -1190,6 +1190,9 @@
             
             controlsHtml += '</div>';
             document.getElementById('scoreControlsSection').innerHTML = controlsHtml;
+
+            // Notify overlay of the updated state
+            try { sendOverlayUpdate(); } catch (e) { /* ignore if function not available */ }
         }
 
         // Keyboard shortcuts
@@ -1268,6 +1271,21 @@
         let __overlayMonitor = null;
         let __overlayAutoInterval = null;
         let __overlayAutoMs = 2000;
+
+        function sendOverlayUpdate() {
+            const payload = { type: 'update', settings: settings, gameState: gameState };
+            try {
+                if (__overlayWindow && !__overlayWindow.closed) {
+                    __overlayWindow.postMessage(payload, '*');
+                }
+            } catch (e) {
+                // ignore
+            }
+            // Also write to localStorage so other windows (same origin) can pick it up
+            try {
+                localStorage.setItem('overlay_full_update', JSON.stringify(payload));
+            } catch (e) {}
+        }
         function toggleOverlay() {
             const btn = document.getElementById('showOverlayBtn');
             const url = 'overlay/obs_scoreboard_full.html?overlay=1';
