@@ -52,6 +52,20 @@
             z-index: 100;
         }
 
+        .overlay-toggle {
+            position: fixed;
+            top: 15px;
+            right: 100px;
+            background: #2463a6;
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            z-index: 100;
+        }
+
         .settings-panel {
             position: fixed;
             top: 0;
@@ -600,6 +614,7 @@
     </div>
 
     <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+    <button class="overlay-toggle" id="showOverlayBtn" onclick="openOverlay()">📺 Show Overlay</button>
 
     <div class="container" id="container">
         <div class="header">
@@ -1246,6 +1261,26 @@
         }
 
         // Initialize
+        // Overlay open/send helpers
+        let __overlayWindow = null;
+        function openOverlay() {
+            const url = 'overlay/obs_scoreboard_full.html?overlay=1';
+            try {
+                if (!__overlayWindow || __overlayWindow.closed) {
+                    __overlayWindow = window.open(url, 'overlayWindow', 'popup=1,width=1280,height=720');
+                } else {
+                    __overlayWindow.focus();
+                }
+                // send current state a few times to ensure overlay receives it
+                const payload = { type: 'update', settings: settings, gameState: gameState };
+                setTimeout(() => { try { __overlayWindow.postMessage(payload, '*'); } catch(e){} }, 300);
+                setTimeout(() => { try { __overlayWindow.postMessage(payload, '*'); } catch(e){} }, 800);
+                setTimeout(() => { try { __overlayWindow.postMessage(payload, '*'); } catch(e){} }, 1500);
+            } catch (e) {
+                alert('Failed to open overlay: ' + e.message);
+            }
+        }
+
         window.addEventListener('load', function() {
             loadSettings();
             loadGameState();
