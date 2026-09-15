@@ -66,6 +66,24 @@
             z-index: 100;
         }
 
+        /* container for top-right controls to avoid overlap */
+        .top-controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 110;
+        }
+
+        /* ensure buttons inside the container are not fixed-positioned */
+        .top-controls .settings-toggle,
+        .top-controls .overlay-toggle,
+        .top-controls input {
+            position: static !important;
+        }
+
         .settings-panel {
             position: fixed;
             top: 0;
@@ -613,10 +631,12 @@
         </small>
     </div>
 
-    <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
-    <button class="overlay-toggle" id="showOverlayBtn" onclick="toggleOverlay()">📺 Show Overlay</button>
-    <button class="overlay-toggle" id="overlayAutoBtn" onclick="toggleOverlayAuto()" style="right:220px;background:#2d8f2d;">🔁 Auto Refresh: Off</button>
-    <input id="overlayAutoMs" type="number" min="500" value="2000" style="position:fixed;right:320px;top:18px;width:80px;padding:8px;border-radius:6px;border:none;background:#222;color:#fff;text-align:center;" title="Auto-refresh interval (ms)">
+    <div class="top-controls">
+        <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
+        <button class="overlay-toggle" id="showOverlayBtn" onclick="toggleOverlay()">📺 Show Overlay</button>
+        <button class="overlay-toggle" id="overlayAutoBtn" onclick="toggleOverlayAuto()" style="background:#2d8f2d;">🔁 Auto Refresh: Off</button>
+        <input id="overlayAutoMs" type="number" min="500" value="2000" style="width:80px;padding:8px;border-radius:6px;border:none;background:#222;color:#fff;text-align:center;" title="Auto-refresh interval (ms)">
+    </div>
 
     <div class="container" id="container">
         <div class="header">
