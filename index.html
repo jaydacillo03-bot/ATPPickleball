@@ -1271,6 +1271,10 @@
         let __overlayMonitor = null;
         let __overlayAutoInterval = null;
         let __overlayAutoMs = 2000;
+        let __overlayDebounceMs = 200;
+        // configurable defaults (can be overridden by overlay/overlay_config.json)
+        let overlayPath = 'overlay/obs_scoreboard_full.html?overlay=1';
+        let overlayWindowFeatures = 'width=1280,height=720,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=1';
 
         let __overlayDebounceTimer = null;
         let __overlayDebounceMs = 200; // coalesce rapid updates into one update every 200ms
@@ -1296,7 +1300,7 @@
         }
         function toggleOverlay() {
             const btn = document.getElementById('showOverlayBtn');
-            const url = 'overlay/obs_scoreboard_full.html?overlay=1';
+            const url = overlayPath;
             try {
                 if (__overlayWindow && !__overlayWindow.closed) {
                     __overlayWindow.close();
@@ -1307,7 +1311,7 @@
                 }
 
                 // open minimal popup (may be limited by browser)
-                const features = 'width=1280,height=720,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=1';
+                const features = overlayWindowFeatures;
                 __overlayWindow = window.open(url, 'overlayWindow', features);
                 btn.textContent = '✖ Close Overlay';
 
@@ -1360,10 +1364,24 @@
         }
 
         window.addEventListener('load', function() {
-            loadSettings();
-            loadGameState();
-            applySettings();
-            updateDisplay();
+            // Load overlay config first (optional), then initialize UI
+            fetch('overlay/overlay_config.json').then(r => r.json()).then(cfg => {
+                if (cfg.overlayUrl) overlayPath = cfg.overlayUrl;
+                if (cfg.debounceMs) __overlayDebounceMs = Number(cfg.debounceMs) || __overlayDebounceMs;
+                if (cfg.autoRefreshMs) __overlayAutoMs = Number(cfg.autoRefreshMs) || __overlayAutoMs;
+                if (cfg.overlayWindowFeatures) overlayWindowFeatures = cfg.overlayWindowFeatures;
+                // optionally auto-start auto-refresh
+                loadSettings();
+                loadGameState();
+                applySettings();
+                updateDisplay();
+                if (cfg.enableAutoStart) startOverlayAuto();
+            }).catch(() => {
+                loadSettings();
+                loadGameState();
+                applySettings();
+                updateDisplay();
+            });
         });
     </script>
 </body>

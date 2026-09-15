@@ -1,0 +1,7 @@
+{
+  "overlayUrl": "overlay/obs_scoreboard_full.html?overlay=1",
+  "debounceMs": 200,
+  "autoRefreshMs": 2000,
+  "overlayWindowFeatures": "width=1280,height=720,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=1",
+  "enableAutoStart": false
+}
