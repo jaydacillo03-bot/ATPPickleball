@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OBS Full Scoreboard Overlay</title>
+  <style>
+    :root{
+      --header-bg:#2a4a3a; --accent:#4a9d6f; --bg:transparent; --text:#ffffff; --row-bg:#2d2d2d; --border:#444;
+      --team1-row:#2d2d2d; --team2-row:#2d2d2d;
+    }
+    html,body{height:100%;margin:0;background:transparent}
+    body{font-family:Arial,Helvetica,sans-serif;color:var(--text);background:transparent}
+    .container{width:100%;padding:20px;box-sizing:border-box}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .titles{display:flex;flex-direction:column}
+    .tournament-title{font-size:24px;font-weight:700;color:var(--text)}
+    .tournament-subtitle{font-size:14px;color:#ddd}
+    .sets{display:flex;gap:10px;align-items:center}
+    .team-row{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:6px;margin-top:10px;background:var(--row-bg);border:1px solid rgba(0,0,0,0.2)}
+    .team-left{display:flex;align-items:center;gap:10px}
+    .team-logo{width:48px;height:48px;border-radius:50%;object-fit:cover}
+    .team-name{font-size:18px;font-weight:700}
+    .score-blocks{display:flex;gap:8px;align-items:center}
+    .score{min-width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;background:rgba(0,0,0,0.25);border-radius:6px;color:var(--accent);}
+    .serving{width:12px;height:12px;border-radius:50%;background:var(--accent);margin-right:8px}
+    .winner-badge{background:#FFD700;color:#000;padding:4px 8px;border-radius:4px;margin-left:8px;font-weight:700}
+    @media (max-width:800px){ .tournament-title{font-size:18px} .score{min-width:44px;height:44px;font-size:18px} }
+  </style>
+</head>
+<body>
+  <div class="container" id="overlayRoot">
+    <div class="header">
+      <div class="titles">
+        <div class="tournament-title" id="ovTitle">PICKLEBALL TOURNAMENT</div>
+        <div class="tournament-subtitle" id="ovSubtitle">Championship Match</div>
+      </div>
+      <div class="sets" id="ovSets"></div>
+    </div>
+
+    <div id="ovTeam1" class="team-row">
+      <div class="team-left"><div id="ovServing1" style="display:none" class="serving"></div><img id="ovLogo1" class="team-logo" src="" alt=""><div class="team-name" id="ovName1">TEAM 1</div></div>
+      <div class="score-blocks" id="ovScores1"></div>
+    </div>
+
+    <div id="ovTeam2" class="team-row">
+      <div class="team-left"><div id="ovServing2" style="display:none" class="serving"></div><img id="ovLogo2" class="team-logo" src="" alt=""><div class="team-name" id="ovName2">TEAM 2</div></div>
+      <div class="score-blocks" id="ovScores2"></div>
+    </div>
+  </div>
+
+  <script>
+    // Minimal overlay that mirrors scoreboard.html state
+    function qs(name){ const p=new URLSearchParams(window.location.search); return p.get(name); }
+
+    const root = document.getElementById('overlayRoot');
+    const ov = {
+      title: document.getElementById('ovTitle'),
+      subtitle: document.getElementById('ovSubtitle'),
+      name1: document.getElementById('ovName1'),
+      name2: document.getElementById('ovName2'),
+      logo1: document.getElementById('ovLogo1'),
+      logo2: document.getElementById('ovLogo2'),
+      scores1: document.getElementById('ovScores1'),
+      scores2: document.getElementById('ovScores2'),
+      serving1: document.getElementById('ovServing1'),
+      serving2: document.getElementById('ovServing2'),
+      sets: document.getElementById('ovSets')
+    };
+
+    // default state
+    let state = {
+      settings: { tournamentTitle:'PICKLEBALL TOURNAMENT', tournamentSubtitle:'Championship Match', accentColor:'#4a9d6f', headerBg:'#2a4a3a', rowBg:'#2d2d2d', team1RowBg:'#2d2d2d', team2RowBg:'#2d2d2d' },
+      gameState: { team1:{name:'TEAM 1',scores:[0]}, team2:{name:'TEAM 2',scores:[0]}, serving:1 }
+    };
+
+    function render(){
+      document.documentElement.style.setProperty('--accent', state.settings.accentColor || '#4a9d6f');
+      document.documentElement.style.setProperty('--header-bg', state.settings.headerBg || '#2a4a3a');
+      document.documentElement.style.setProperty('--row-bg', state.settings.rowBg || '#2d2d2d');
+      ov.title.textContent = state.settings.tournamentTitle || '';
+      ov.subtitle.textContent = state.settings.tournamentSubtitle || '';
+      ov.name1.textContent = state.gameState.team1.name || '';
+      ov.name2.textContent = state.gameState.team2.name || '';
+      // logos
+      if(state.settings.team1Image) { ov.logo1.src = state.settings.team1Image; ov.logo1.style.display='block'; } else { ov.logo1.style.display='none'; }
+      if(state.settings.team2Image) { ov.logo2.src = state.settings.team2Image; ov.logo2.style.display='block'; } else { ov.logo2.style.display='none'; }
+
+      // set counts
+      const numSets = Math.max(state.gameState.team1.scores.length, state.gameState.team2.scores.length);
+      ov.sets.innerHTML = '';
+      for(let i=0;i<numSets;i++){ const s=document.createElement('div'); s.textContent=`Set ${i+1}`; s.style.padding='4px 8px'; s.style.background='rgba(0,0,0,0.25)'; s.style.borderRadius='4px'; ov.sets.appendChild(s); }
+
+      // scores blocks
+      ov.scores1.innerHTML=''; ov.scores2.innerHTML='';
+      for(let i=0;i<numSets;i++){
+        const a = document.createElement('div'); a.className='score'; a.textContent = state.gameState.team1.scores[i] ?? 0; ov.scores1.appendChild(a);
+        const b = document.createElement('div'); b.className='score'; b.textContent = state.gameState.team2.scores[i] ?? 0; ov.scores2.appendChild(b);
+      }
+
+      // serving
+      if(state.gameState.serving === 1){ ov.serving1.style.display='block'; ov.serving2.style.display='none'; } else { ov.serving1.style.display='none'; ov.serving2.style.display='block'; }
+
+      // winner badges
+      // determine last set winner similar to original check (simple greater-than)
+      const lastIdx = numSets-1;
+      const s1 = state.gameState.team1.scores[lastIdx] ?? 0;
+      const s2 = state.gameState.team2.scores[lastIdx] ?? 0;
+      // remove existing badges
+      const existing1 = ov.name1.querySelector('.winner-badge'); if(existing1) existing1.remove();
+      const existing2 = ov.name2.querySelector('.winner-badge'); if(existing2) existing2.remove();
+      if(s1 > s2) { const w=document.createElement('span'); w.className='winner-badge'; w.textContent='WINNER'; ov.name1.appendChild(w);} else if(s2 > s1){ const w=document.createElement('span'); w.className='winner-badge'; w.textContent='WINNER'; ov.name2.appendChild(w);}    }
+
+    // Accept updates via postMessage, WS, query params
+    function applyUpdate(payload){
+      try{
+        if(payload.settings) state.settings = {...state.settings, ...payload.settings};
+        if(payload.gameState) state.gameState = {...state.gameState, ...payload.gameState};
+        // allow direct fields
+        if(payload.teamAName) state.gameState.team1.name = String(payload.teamAName);
+        if(payload.teamBName) state.gameState.team2.name = String(payload.teamBName);
+        if(payload.scoreA !== undefined){ const idx=state.gameState.team1.scores.length-1; state.gameState.team1.scores[idx]=Number(payload.scoreA); }
+        if(payload.scoreB !== undefined){ const idx=state.gameState.team2.scores.length-1; state.gameState.team2.scores[idx]=Number(payload.scoreB); }
+        if(payload.scoresA) state.gameState.team1.scores = payload.scoresA.slice();
+        if(payload.scoresB) state.gameState.team2.scores = payload.scoresB.slice();
+        if(payload.serving !== undefined) state.gameState.serving = Number(payload.serving);
+        if(payload.team1Image) state.settings.team1Image = payload.team1Image;
+        if(payload.team2Image) state.settings.team2Image = payload.team2Image;
+      }catch(e){console.warn('applyUpdate',e)}
+      render();
+    }
+
+    window.addEventListener('message',(ev)=>{ try{ const d=typeof ev.data==='string'?JSON.parse(ev.data):ev.data; if(d) applyUpdate(d); }catch(e){} },false);
+
+    // WebSocket if provided via query param 'ws'
+    (function(){ const wsUrl=qs('ws'); if(!wsUrl) return; try{ const ws=new WebSocket(wsUrl); ws.addEventListener('message',m=>{ try{ applyUpdate(JSON.parse(m.data)); }catch(e){} }); ws.addEventListener('open',()=>console.log('overlay ws open')); ws.addEventListener('error',e=>console.warn('overlay ws error',e)); }catch(e){console.warn('overlay ws init failed',e);} })();
+
+    // Init from query params
+    (function(){ const qtitle=qs('t'); const qsub=qs('s'); if(qtitle) state.settings.tournamentTitle = qtitle; if(qsub) state.settings.tournamentSubtitle = qsub; const n1=qs('teamAName'); const n2=qs('teamBName'); if(n1) state.gameState.team1.name=n1; if(n2) state.gameState.team2.name=n2; const sa=qs('scoreA'); const sb=qs('scoreB'); if(sa) state.gameState.team1.scores[state.gameState.team1.scores.length-1]=Number(sa); if(sb) state.gameState.team2.scores[state.gameState.team2.scores.length-1]=Number(sb); render(); })();
+
+    // Expose API
+    window.OBSScoreboardFull = { update: applyUpdate };
+
+    // Also listen to localStorage events (optional controller using localStorage)
+    window.addEventListener('storage',(ev)=>{ if(ev.key==='overlay_full_update'){ try{ applyUpdate(JSON.parse(ev.newValue)); }catch(e){} } });
+
+  </script>
+</body>
+</html>
