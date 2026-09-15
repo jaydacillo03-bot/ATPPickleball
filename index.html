@@ -1272,7 +1272,10 @@
         let __overlayAutoInterval = null;
         let __overlayAutoMs = 2000;
 
-        function sendOverlayUpdate() {
+        let __overlayDebounceTimer = null;
+        let __overlayDebounceMs = 200; // coalesce rapid updates into one update every 200ms
+
+        function sendOverlayActually() {
             const payload = { type: 'update', settings: settings, gameState: gameState };
             try {
                 if (__overlayWindow && !__overlayWindow.closed) {
@@ -1285,6 +1288,11 @@
             try {
                 localStorage.setItem('overlay_full_update', JSON.stringify(payload));
             } catch (e) {}
+        }
+
+        function sendOverlayUpdate() {
+            if (__overlayDebounceTimer) clearTimeout(__overlayDebounceTimer);
+            __overlayDebounceTimer = setTimeout(() => { __overlayDebounceTimer = null; sendOverlayActually(); }, __overlayDebounceMs);
         }
         function toggleOverlay() {
             const btn = document.getElementById('showOverlayBtn');
