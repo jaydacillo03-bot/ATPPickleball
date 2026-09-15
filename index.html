@@ -614,7 +614,7 @@
     </div>
 
     <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
-    <button class="overlay-toggle" id="showOverlayBtn" onclick="openOverlay()">📺 Show Overlay</button>
+    <button class="overlay-toggle" id="showOverlayBtn" onclick="toggleOverlay()">📺 Show Overlay</button>
 
     <div class="container" id="container">
         <div class="header">
@@ -1261,21 +1261,44 @@
         }
 
         // Initialize
-        // Overlay open/send helpers
+        // Overlay open/send helpers (toggle button + minimal popup)
         let __overlayWindow = null;
-        function openOverlay() {
+        let __overlayMonitor = null;
+        function toggleOverlay() {
+            const btn = document.getElementById('showOverlayBtn');
             const url = 'overlay/obs_scoreboard_full.html?overlay=1';
             try {
-                if (!__overlayWindow || __overlayWindow.closed) {
-                    __overlayWindow = window.open(url, 'overlayWindow', 'popup=1,width=1280,height=720');
-                } else {
-                    __overlayWindow.focus();
+                if (__overlayWindow && !__overlayWindow.closed) {
+                    __overlayWindow.close();
+                    __overlayWindow = null;
+                    btn.textContent = '📺 Show Overlay';
+                    if (__overlayMonitor) { clearInterval(__overlayMonitor); __overlayMonitor = null; }
+                    return;
                 }
+
+                // open minimal popup (may be limited by browser)
+                const features = 'width=1280,height=720,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=1';
+                __overlayWindow = window.open(url, 'overlayWindow', features);
+                btn.textContent = '✖ Close Overlay';
+
                 // send current state a few times to ensure overlay receives it
-                const payload = { type: 'update', settings: settings, gameState: gameState };
-                setTimeout(() => { try { __overlayWindow.postMessage(payload, '*'); } catch(e){} }, 300);
-                setTimeout(() => { try { __overlayWindow.postMessage(payload, '*'); } catch(e){} }, 800);
-                setTimeout(() => { try { __overlayWindow.postMessage(payload, '*'); } catch(e){} }, 1500);
+                const sendState = () => {
+                    const payload = { type: 'update', settings: settings, gameState: gameState };
+                    try { if (__overlayWindow && !__overlayWindow.closed) __overlayWindow.postMessage(payload, '*'); } catch (e) { /* ignore */ }
+                };
+                setTimeout(sendState, 300);
+                setTimeout(sendState, 800);
+                setTimeout(sendState, 1500);
+
+                // monitor and update button when overlay is closed manually
+                __overlayMonitor = setInterval(() => {
+                    if (!__overlayWindow || __overlayWindow.closed) {
+                        const b = document.getElementById('showOverlayBtn');
+                        if (b) b.textContent = '📺 Show Overlay';
+                        clearInterval(__overlayMonitor); __overlayMonitor = null; __overlayWindow = null;
+                    }
+                }, 1000);
+
             } catch (e) {
                 alert('Failed to open overlay: ' + e.message);
             }
