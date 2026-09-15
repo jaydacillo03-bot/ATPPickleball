@@ -1276,8 +1276,7 @@
         let overlayPath = 'overlay/obs_scoreboard_full.html?overlay=1';
         let overlayWindowFeatures = 'width=1280,height=720,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=1';
 
-        let __overlayDebounceTimer = null;
-        let __overlayDebounceMs = 200; // coalesce rapid updates into one update every 200ms
+        let __overlayDebounceTimer = null; // coalesce rapid updates into one update every 200ms
 
         function sendOverlayActually() {
             const payload = { type: 'update', settings: settings, gameState: gameState };
