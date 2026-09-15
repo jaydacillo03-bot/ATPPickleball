@@ -603,27 +603,8 @@
 
     <div class="container" id="container">
         <div class="header">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                <div>
-                    <div class="tournament-title" id="tournamentTitle">PICKLEBALL TOURNAMENT</div>
-                    <div class="tournament-subtitle" id="tournamentSubtitle">Championship Match</div>
-                </div>
-                <div style="text-align:right;">
-                    <a href="overlay/obs_scoreboard.html?overlay=1" target="_blank" style="color:var(--text-color);background:var(--accent-color);padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:8px;">Open Overlay</a>
-                    <button id="toggleTestSender" onclick="toggleTestSender()" style="background:#333;color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;margin-right:8px;">Test Sender</button>
-                    <div style="font-size:0.85em;color:#ccc;margin-top:6px;">Run `npm install` in `overlay/` to use the demo WS & CLI</div>
-
-                    <div id="testSender" style="display:none;margin-top:8px;text-align:right;">
-                        <input id="wsUrlInput" placeholder="ws://localhost:8080" style="width:180px;padding:6px;margin-right:6px;border-radius:4px;border:1px solid #444;background:transparent;color:#fff;">
-                        <input id="teamAInput" placeholder="Team A" style="width:110px;padding:6px;margin-right:6px;border-radius:4px;border:1px solid #444;background:transparent;color:#fff;">
-                        <input id="teamBInput" placeholder="Team B" style="width:110px;padding:6px;margin-right:6px;border-radius:4px;border:1px solid #444;background:transparent;color:#fff;">
-                        <input id="scoreAInput" type="number" min="0" placeholder="0" style="width:60px;padding:6px;margin-right:6px;border-radius:4px;border:1px solid #444;background:transparent;color:#fff;">
-                        <input id="scoreBInput" type="number" min="0" placeholder="0" style="width:60px;padding:6px;margin-right:6px;border-radius:4px;border:1px solid #444;background:transparent;color:#fff;">
-                        <button onclick="sendTestUpdate()" style="padding:6px 10px;border-radius:4px;background:var(--accent-color);border:none;color:#000;font-weight:bold;cursor:pointer;margin-right:6px;">Send</button>
-                        <button id="demoBtn" onclick="toggleTestDemo()" style="padding:6px 10px;border-radius:4px;background:#6c5ce7;border:none;color:#fff;cursor:pointer;">Demo</button>
-                    </div>
-                </div>
-            </div>
+            <div class="tournament-title" id="tournamentTitle">PICKLEBALL TOURNAMENT</div>
+            <div class="tournament-subtitle" id="tournamentSubtitle">Championship Match</div>
         </div>
 
         <div class="scoreboard-wrapper">
@@ -1271,65 +1252,6 @@
             applySettings();
             updateDisplay();
         });
-
-        // ---------- Overlay test sender helpers ----------
-        function toggleTestSender() {
-            const el = document.getElementById('testSender');
-            if (!el) return;
-            el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
-        }
-
-        function connectAndSend(wsUrl, payload, onSent) {
-            try {
-                const ws = new WebSocket(wsUrl);
-                ws.addEventListener('open', () => {
-                    ws.send(JSON.stringify(payload));
-                    if (onSent) onSent();
-                    ws.close();
-                });
-                ws.addEventListener('error', (e) => { alert('WebSocket error: ' + e.message); });
-            } catch (e) {
-                alert('Failed to connect to WebSocket: ' + e.message);
-            }
-        }
-
-        function sendTestUpdate() {
-            const wsUrl = document.getElementById('wsUrlInput').value.trim();
-            const teamA = document.getElementById('teamAInput').value.trim() || 'TEAM A';
-            const teamB = document.getElementById('teamBInput').value.trim() || 'TEAM B';
-            const scoreA = Number(document.getElementById('scoreAInput').value) || 0;
-            const scoreB = Number(document.getElementById('scoreBInput').value) || 0;
-            const payload = { type: 'update', teamAName: teamA, teamBName: teamB, scoreA: scoreA, scoreB: scoreB };
-            if (wsUrl) {
-                connectAndSend(wsUrl, payload, () => console.log('test update sent'));
-            } else {
-                // Open overlay tab with query params if no ws provided
-                const url = `overlay/obs_scoreboard.html?overlay=1&teamAName=${encodeURIComponent(teamA)}&teamBName=${encodeURIComponent(teamB)}&scoreA=${scoreA}&scoreB=${scoreB}`;
-                window.open(url, '_blank');
-            }
-        }
-
-        let _demoInterval = null;
-        function toggleTestDemo() {
-            const btn = document.getElementById('demoBtn');
-            if (_demoInterval) {
-                clearInterval(_demoInterval); _demoInterval = null; btn.textContent = 'Demo'; return;
-            }
-            const wsUrl = document.getElementById('wsUrlInput').value.trim();
-            let a = Number(document.getElementById('scoreAInput').value) || 0;
-            let b = Number(document.getElementById('scoreBInput').value) || 0;
-            _demoInterval = setInterval(() => {
-                if (Math.random() > 0.5) a++; else b++;
-                const payload = { type: 'update', teamAName: document.getElementById('teamAInput').value || 'A', teamBName: document.getElementById('teamBInput').value || 'B', scoreA: a, scoreB: b };
-                if (wsUrl) {
-                    connectAndSend(wsUrl, payload);
-                } else {
-                    // open overlay window if not open: broadcast by localStorage event as fallback
-                    localStorage.setItem('overlay_last_update', JSON.stringify(payload));
-                }
-            }, 2000);
-            btn.textContent = 'Stop';
-        }
     </script>
 </body>
 </html>
