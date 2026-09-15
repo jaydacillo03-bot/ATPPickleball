@@ -633,6 +633,73 @@
     </div>
 
     <script>
+        // Helper: get query param
+        function qs(name, fallback) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name) ?? fallback;
+        }
+
+        // OBS / overlay mode support
+        const _isOverlayMode = (qs('overlay', '') === '1' || qs('overlay', '') === 'true');
+        const _wsUrl = qs('ws', '');
+
+        if (_isOverlayMode) {
+            // Make background transparent and hide UI controls for OBS browser source
+            document.documentElement.style.setProperty('--dark-bg', 'transparent');
+            document.body.style.background = 'transparent';
+            const settingsToggle = document.querySelector('.settings-toggle');
+            if (settingsToggle) settingsToggle.style.display = 'none';
+            const settingsPanel = document.getElementById('settingsPanel');
+            if (settingsPanel) settingsPanel.style.display = 'none';
+            const controls = document.querySelectorAll('.controls, .keyboard-hint, .setting-group, .btn-save, .btn-tabulation');
+            controls.forEach(c => { if (c) c.style.display = 'none'; });
+            const container = document.getElementById('container');
+            if (container) container.style.border = 'none';
+        }
+
+        // Setup incoming update channel (postMessage and optional WebSocket)
+        function applyOverlayUpdate(obj) {
+            try {
+                if (obj.teamAName != null) gameState.team1.name = String(obj.teamAName).toUpperCase();
+                if (obj.teamBName != null) gameState.team2.name = String(obj.teamBName).toUpperCase();
+                if (obj.scoreA != null) {
+                    const idx = gameState.team1.scores.length - 1;
+                    gameState.team1.scores[idx] = Number(obj.scoreA);
+                }
+                if (obj.scoreB != null) {
+                    const idx = gameState.team2.scores.length - 1;
+                    gameState.team2.scores[idx] = Number(obj.scoreB);
+                }
+                if (obj.serving != null) gameState.serving = Number(obj.serving);
+                updateDisplay();
+            } catch (e) {
+                console.warn('Overlay update failed', e);
+            }
+        }
+
+        window.addEventListener('message', (ev) => {
+            try {
+                const data = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data;
+                if (data && (data.type === 'update' || data.type === 'overlay-update')) applyOverlayUpdate(data);
+            } catch (e) {}
+        }, false);
+
+        if (_wsUrl) {
+            try {
+                const _ws = new WebSocket(_wsUrl);
+                _ws.addEventListener('message', (m) => {
+                    try { const payload = JSON.parse(m.data); applyOverlayUpdate(payload); } catch (e) {}
+                });
+                _ws.addEventListener('open', () => console.log('Overlay WS connected'));
+                _ws.addEventListener('close', () => console.log('Overlay WS closed'));
+                _ws.addEventListener('error', (err) => console.warn('Overlay WS error', err));
+            } catch (e) { console.warn('Failed to open overlay WS', e); }
+        }
+
+        // Public API for manual updates from browser console or other scripts
+        window.OBSScoreboard = {
+            update: applyOverlayUpdate
+        };
         let gameState = {
             team1: { name: 'TEAM 1', scores: [0] },
             team2: { name: 'TEAM 2', scores: [0] },

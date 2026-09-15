@@ -1,0 +1,17 @@
+{
+  "name": "pickleball-overlay-tools",
+  "version": "1.0.0",
+  "description": "Tools for testing the OBS scoreboard overlay (ws server + cli)",
+  "main": "ws_server_node.js",
+  "scripts": {
+    "start": "node ws_server_node.js",
+    "demo": "node ws_server_node.js --demo",
+    "cli": "node ws_cli.js"
+  },
+  "dependencies": {
+    "ws": "^8.13.0",
+    "minimist": "^1.2.8"
+  },
+  "author": "",
+  "license": "MIT"
+}

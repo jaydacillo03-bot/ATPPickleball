@@ -1,0 +1,25 @@
+:root{
+  --bg: transparent;
+  --text: #ffffff;
+  --accent: #00b0ff;
+  --font: 'Helvetica Neue', Arial, sans-serif;
+}
+html,body{height:100%;margin:0;background:transparent}
+body{font-family:var(--font);-webkit-font-smoothing:antialiased}
+#scoreboard{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;width:100%;box-sizing:border-box}
+.team{display:flex;flex-direction:column;align-items:center;min-width:180px}
+.team-name{font-size:28px;color:var(--text);opacity:0.95}
+.team-score{font-size:120px;font-weight:700;color:var(--accent);margin-top:6px}
+.middle{display:flex;align-items:center;justify-content:center;flex:1}
+.match{font-size:32px;color:var(--text);opacity:0.9}
+
+/* Responsive */
+@media (max-width:800px){
+  .team-name{font-size:18px}
+  .team-score{font-size:72px}
+  .match{font-size:20px}
+  #scoreboard{padding:12px}
+}
+
+/* Ensure background remains transparent in OBS */
+body, #scoreboard{background:transparent}
