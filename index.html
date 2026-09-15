@@ -615,6 +615,8 @@
 
     <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
     <button class="overlay-toggle" id="showOverlayBtn" onclick="toggleOverlay()">📺 Show Overlay</button>
+    <button class="overlay-toggle" id="overlayAutoBtn" onclick="toggleOverlayAuto()" style="right:220px;background:#2d8f2d;">🔁 Auto Refresh: Off</button>
+    <input id="overlayAutoMs" type="number" min="500" value="2000" style="position:fixed;right:320px;top:18px;width:80px;padding:8px;border-radius:6px;border:none;background:#222;color:#fff;text-align:center;" title="Auto-refresh interval (ms)">
 
     <div class="container" id="container">
         <div class="header">
@@ -1264,6 +1266,8 @@
         // Overlay open/send helpers (toggle button + minimal popup)
         let __overlayWindow = null;
         let __overlayMonitor = null;
+        let __overlayAutoInterval = null;
+        let __overlayAutoMs = 2000;
         function toggleOverlay() {
             const btn = document.getElementById('showOverlayBtn');
             const url = 'overlay/obs_scoreboard_full.html?overlay=1';
@@ -1296,12 +1300,37 @@
                         const b = document.getElementById('showOverlayBtn');
                         if (b) b.textContent = '📺 Show Overlay';
                         clearInterval(__overlayMonitor); __overlayMonitor = null; __overlayWindow = null;
+                        // stop auto-refresh when overlay closed
+                        stopOverlayAuto();
                     }
                 }, 1000);
 
             } catch (e) {
                 alert('Failed to open overlay: ' + e.message);
             }
+        }
+
+        function startOverlayAuto() {
+            if (__overlayAutoInterval) return;
+            const msInput = document.getElementById('overlayAutoMs');
+            const btn = document.getElementById('overlayAutoBtn');
+            __overlayAutoMs = (msInput && Number(msInput.value) >= 500) ? Number(msInput.value) : 2000;
+            if (!__overlayWindow || __overlayWindow.closed) toggleOverlay();
+            __overlayAutoInterval = setInterval(() => {
+                try { if (__overlayWindow && !__overlayWindow.closed) __overlayWindow.postMessage({ type:'update', settings: settings, gameState: gameState }, '*'); }
+                catch(e){}
+            }, __overlayAutoMs);
+            if (btn) btn.textContent = '🔁 Auto Refresh: On';
+        }
+
+        function stopOverlayAuto() {
+            const btn = document.getElementById('overlayAutoBtn');
+            if (__overlayAutoInterval) { clearInterval(__overlayAutoInterval); __overlayAutoInterval = null; }
+            if (btn) btn.textContent = '🔁 Auto Refresh: Off';
+        }
+
+        function toggleOverlayAuto() {
+            if (__overlayAutoInterval) stopOverlayAuto(); else startOverlayAuto();
         }
 
         window.addEventListener('load', function() {
