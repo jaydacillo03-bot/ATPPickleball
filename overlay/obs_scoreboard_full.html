@@ -101,15 +101,7 @@
       // serving
       if(state.gameState.serving === 1){ ov.serving1.style.display='block'; ov.serving2.style.display='none'; } else { ov.serving1.style.display='none'; ov.serving2.style.display='block'; }
 
-      // winner badges
-      // determine last set winner similar to original check (simple greater-than)
-      const lastIdx = numSets-1;
-      const s1 = state.gameState.team1.scores[lastIdx] ?? 0;
-      const s2 = state.gameState.team2.scores[lastIdx] ?? 0;
-      // remove existing badges
-      const existing1 = ov.name1.querySelector('.winner-badge'); if(existing1) existing1.remove();
-      const existing2 = ov.name2.querySelector('.winner-badge'); if(existing2) existing2.remove();
-      if(s1 > s2) { const w=document.createElement('span'); w.className='winner-badge'; w.textContent='WINNER'; ov.name1.appendChild(w);} else if(s2 > s1){ const w=document.createElement('span'); w.className='winner-badge'; w.textContent='WINNER'; ov.name2.appendChild(w);}    }
+    }
 
     // Accept updates via postMessage, WS, query params
     function applyUpdate(payload){
