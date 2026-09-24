@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
@@ -8,6 +9,11 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+var projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+var projectFileProvider = new PhysicalFileProvider(projectDir);
+app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = projectFileProvider });
+app.UseStaticFiles(new StaticFileOptions { FileProvider = projectFileProvider });
 
 var store = MatchResultStore.Create();
 

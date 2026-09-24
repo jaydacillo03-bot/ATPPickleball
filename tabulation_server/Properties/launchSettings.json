@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "TabulationServer": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "index.html",
+      "applicationUrl": "http://localhost:5055",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "FIREBASE_PROJECT_ID": "atp-pickleball-f673a"
+      }
+    }
+  }
+}

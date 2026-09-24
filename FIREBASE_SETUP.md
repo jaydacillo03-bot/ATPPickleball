@@ -23,7 +23,7 @@ Example in macOS/Linux:
 ```sh
 export FIREBASE_PROJECT_ID="atp-pickleball-f673a"
 export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/firebase/your-service-account.json"
-dotnet run --project tabulation_server/TabulationServer.csproj
+dotnet run --project tabulation_server/TabulationServer.csproj --launch-profile TabulationServer
 ```
 
 Example in PowerShell:
@@ -31,8 +31,10 @@ Example in PowerShell:
 ```powershell
 $env:FIREBASE_PROJECT_ID = "atp-pickleball-f673a"
 $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\secure\your-service-account.json"
-dotnet run --project tabulation_server/TabulationServer.csproj
+dotnet run --project tabulation_server/TabulationServer.csproj --launch-profile TabulationServer
 ```
+
+Open `http://localhost:5055/index.html` or `http://localhost:5055/scoreboard.html` after the server starts. Use these URLs instead of opening the HTML files directly from Finder or VS Code; the server must be running for match saves to reach Firestore.
 
 Never commit the service-account JSON file or put it in a public web folder.
 
