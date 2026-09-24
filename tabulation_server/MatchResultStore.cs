@@ -28,10 +28,17 @@ public static class MatchResultStore
 {
     public static IMatchResultStore Create()
     {
-        var projectId = Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID");
-        return string.IsNullOrWhiteSpace(projectId)
-            ? new SqliteMatchResultStore()
-            : new FirestoreMatchResultStore(FirestoreDb.Create(projectId));
+        var useSqlite = string.Equals(
+            Environment.GetEnvironmentVariable("USE_SQLITE"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+        if (useSqlite)
+        {
+            return new SqliteMatchResultStore();
+        }
+
+        var projectId = Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID") ?? "atp-pickleball-f673a";
+        return new FirestoreMatchResultStore(FirestoreDb.Create(projectId));
     }
 }
 

@@ -733,7 +733,7 @@
                     throw new Error(`Server responded with ${response.status}`);
                 }
             } catch (error) {
-                console.warn('Could not persist match to API. Falling back to local storage.', error);
+                throw new Error(`Could not save the match to the database: ${error.message}`);
             }
         }
 
@@ -1198,12 +1198,12 @@
 
             try {
                 const match = getFormMatch();
+                await persistMatchToDatabase(match);
                 if (editingId) {
                     matches = matches.map(item => item.id === editingId ? match : item);
                 } else {
                     matches.push(match);
                 }
-                await persistMatchToDatabase(match);
                 await saveMatches();
                 resetForm();
                 render();

@@ -52,6 +52,6 @@ Each document ID is the match ID supplied by the existing tabulation page. The f
 
 The server upserts a document when a match is saved and deletes it when a match is deleted.
 
-## Local fallback
+## Local SQLite mode
 
-If `FIREBASE_PROJECT_ID` is not set, the server uses the existing local `tabulation_results.sqlite` file. Set both Firebase variables before launching when you want matches written to Firestore.
+Firestore is the default store for this project. To deliberately use the existing local `tabulation_results.sqlite` file during offline development, set `USE_SQLITE=true` before launching. Do not set it for tournament use.

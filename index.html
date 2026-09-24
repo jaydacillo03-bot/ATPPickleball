@@ -970,7 +970,7 @@
             XLSX.writeFile(wb, filename);
         }
 
-        function saveMatchToTabulation() {
+        async function saveMatchToTabulation() {
             const setIndex = gameState.team1.scores.length - 1;
             const scoreA = gameState.team1.scores[setIndex];
             const scoreB = gameState.team2.scores[setIndex];
@@ -1003,6 +1003,18 @@
                 court: '-',
                 createdAt: new Date().toISOString()
             };
+
+            try {
+                const response = await fetch('/api/tabulation/results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...match, winner: team1Won ? match.teamA : match.teamB })
+                });
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+            } catch (error) {
+                alert(`Could not save the match to the database: ${error.message}`);
+                return;
+            }
 
             matches.push(match);
             localStorage.setItem(storageKey, JSON.stringify(matches));
