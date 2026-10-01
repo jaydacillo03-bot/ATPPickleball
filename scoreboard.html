@@ -572,11 +572,11 @@
 
         .team-logo,
         .team-logo-placeholder {
-            flex: 0 0 54px;
-            width: 54px;
-            height: 34px;
+            flex: 0 0 46px;
+            width: 46px;
+            height: 46px;
             border: 1px solid rgba(25, 25, 32, 0.18);
-            border-radius: 8px;
+            border-radius: 50%;
             box-shadow: none;
         }
 
@@ -668,7 +668,7 @@
             .tournament-title { font-size: 1rem; }
             .team-row { min-height: 54px; }
             .team-name { padding: 0 8px; gap: 7px; font-size: 1rem; }
-            .team-logo, .team-logo-placeholder { flex-basis: 42px; width: 42px; height: 29px; }
+            .team-logo, .team-logo-placeholder { flex-basis: 36px; width: 36px; height: 36px; }
             .broadcast-set-total { flex-basis: 38px; font-size: 1rem; }
             .broadcast-set-score { flex-basis: 38px; font-size: 1rem; }
             .score-column { flex-basis: 62px; }
@@ -1072,6 +1072,21 @@
             }
         }
 
+        function downloadMatchCsv(data, filename) {
+            const csv = data.map(row => row.map(value => {
+                const cell = String(value ?? '');
+                return `"${cell.replace(/"/g, '""')}"`;
+            }).join(',')).join('\r\n');
+            const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
         function saveMatchToExcel() {
             // Prepare data for Excel
             const currentDate = new Date().toLocaleString();
@@ -1108,6 +1123,12 @@
                 data.push([`Set ${i + 1}`, gameState.team1.scores[i], gameState.team2.scores[i]]);
             }
 
+            const timestamp = new Date().toISOString().slice(0, 10);
+            if (typeof XLSX === 'undefined') {
+                downloadMatchCsv(data, `Pickleball_Match_${timestamp}.csv`);
+                return;
+            }
+
             // Create workbook and worksheet
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -1117,7 +1138,6 @@
             ws['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }];
 
             // Generate filename with timestamp
-            const timestamp = new Date().toISOString().slice(0, 10);
             const filename = `Pickleball_Match_${timestamp}.xlsx`;
 
             // Save the file
@@ -1158,6 +1178,15 @@
                 createdAt: new Date().toISOString()
             };
 
+            matches.push(match);
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(matches));
+            } catch (error) {
+                alert(`Could not save the match on this device: ${error.message}`);
+                return;
+            }
+            refreshTabulationOptions();
+
             try {
                 const response = await fetch('/api/tabulation/results', {
                     method: 'POST',
@@ -1165,15 +1194,10 @@
                     body: JSON.stringify({ ...match, winner: team1Won ? match.teamA : match.teamB })
                 });
                 if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+                alert(`Saved to ${division} and synced to the database. Winner: ${team1Won ? gameState.team1.name : gameState.team2.name}`);
             } catch (error) {
-                alert(`Could not save the match to the database: ${error.message}`);
-                return;
+                alert(`Saved to ${division} on this device only. Database sync failed: ${error.message}`);
             }
-
-            matches.push(match);
-            localStorage.setItem(storageKey, JSON.stringify(matches));
-            refreshTabulationOptions();
-            alert(`Saved to ${division}. Winner: ${team1Won ? gameState.team1.name : gameState.team2.name}`);
         }
 
         function handleTabulationStorageEvent(event) {
