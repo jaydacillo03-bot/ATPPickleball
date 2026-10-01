@@ -20,11 +20,12 @@
     .sets{align-self:stretch}
     .column-title{display:flex;flex:0 0 42px;align-items:center;justify-content:center;color:#e8e5f5;font-size:9px;font-weight:800;text-align:center}
     .column-title.live-label{flex-basis:76px}
-    .team-row{display:flex;align-items:stretch;min-height:56px;margin-top:4px;overflow:hidden;background:var(--row-bg);box-shadow:inset 0 -1px rgba(25,25,32,.12)}
+    .column-title.serve-heading{flex-basis:34px}
+    .team-row{display:flex;align-items:stretch;min-height:56px;margin-top:4px;padding-right:12px;box-sizing:border-box;overflow:hidden;background:var(--row-bg);box-shadow:inset 0 -1px rgba(25,25,32,.12)}
     .team-row.serving{box-shadow:inset 0 0 0 2px #78bf52}
     .team-left{display:flex;flex:1 1 auto;min-width:0;align-items:center;gap:9px;padding:0 10px}
-    .team-logo{flex:0 0 48px;width:48px;height:32px;border:1px solid rgba(25,25,32,.18);border-radius:1px;object-fit:cover}
-    .team-initials{display:flex;flex:0 0 48px;width:48px;height:32px;align-items:center;justify-content:center;border:1px solid rgba(25,25,32,.18);background:#c7c3d8;color:#393052;font-size:12px;font-weight:800}
+    .team-logo{flex:0 0 48px;width:48px;height:32px;border:1px solid rgba(25,25,32,.18);border-radius:8px;object-fit:cover}
+    .team-initials{display:flex;flex:0 0 48px;width:48px;height:32px;align-items:center;justify-content:center;border:1px solid rgba(25,25,32,.18);border-radius:8px;background:#c7c3d8;color:#393052;font-size:12px;font-weight:800}
     .team-name{overflow:hidden;color:#15151c;font-size:20px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
     #ovServing1,#ovServing2{display:none}
     .score-blocks{align-items:stretch}
@@ -41,7 +42,8 @@
       .tournament-subtitle{font-size:10px}
       .column-title{flex-basis:30px;font-size:8px}
       .column-title.live-label{flex-basis:50px}
-      .team-row{min-height:46px}
+      .column-title.serve-heading{flex-basis:25px}
+      .team-row{min-height:46px;padding-right:8px}
       .team-left{gap:6px;padding:0 6px}
       .team-logo,.team-initials{flex-basis:38px;width:38px;height:26px}
       .team-name{font-size:14px}
@@ -142,6 +144,10 @@
       liveLabel.className = 'column-title live-label';
       liveLabel.textContent = 'LIVE';
       ov.sets.appendChild(liveLabel);
+      const serveHeading = document.createElement('div');
+      serveHeading.className = 'column-title serve-heading';
+      serveHeading.setAttribute('aria-hidden', 'true');
+      ov.sets.appendChild(serveHeading);
 
       const renderScores = (target, teamScores, setWins) => {
         target.innerHTML = `<div class="score-total">${setWins}</div>`;
