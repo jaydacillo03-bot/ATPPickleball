@@ -485,6 +485,196 @@
                 font-size: 0.9em;
             }
         }
+
+        .container {
+            max-width: 980px;
+            background: #171821;
+            border: 1px solid #353744;
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 112px 10px 18px;
+            text-align: left;
+            background: #4b3e83;
+            border-bottom: 3px solid #9284d5;
+        }
+
+        .tournament-title {
+            margin: 0;
+            font-size: 1.2em;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        .tournament-subtitle {
+            color: #d8d4ef;
+            font-size: 0.82em;
+            letter-spacing: 0;
+        }
+
+        .scoreboard-wrapper {
+            display: grid;
+            gap: 4px;
+            padding: 10px;
+        }
+
+        .team-row {
+            min-width: 0;
+            display: flex;
+            gap: 4px;
+            align-items: stretch;
+            min-height: 62px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            background: #e7e7eb;
+            border: 0;
+            border-radius: 2px;
+            box-shadow: inset 0 -1px rgba(25, 25, 32, 0.12);
+        }
+
+        .team-row.team1,
+        .team-row.team2 {
+            background: #e7e7eb;
+        }
+
+        .team-row.serving {
+            border: 0;
+            box-shadow: inset 0 0 0 2px #78bf52;
+        }
+
+        .team-row.winner {
+            background: #f1edf9 !important;
+            box-shadow: inset 0 0 0 2px #9284d5;
+        }
+
+        .team-name {
+            flex: 1 1 auto;
+            min-width: 0;
+            gap: 10px;
+            padding: 0 14px;
+            color: #15151c;
+            font-size: 1.45rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .team-name:hover {
+            color: #4b3e83;
+        }
+
+        .team-logo,
+        .team-logo-placeholder {
+            flex: 0 0 54px;
+            width: 54px;
+            height: 34px;
+            border: 1px solid rgba(25, 25, 32, 0.18);
+            border-radius: 1px;
+            box-shadow: none;
+        }
+
+        .team-logo {
+            object-fit: cover;
+        }
+
+        .team-logo-placeholder {
+            background: #c7c3d8;
+            color: #393052;
+            font-size: 0.78em;
+        }
+
+        .serving-logo {
+            display: none;
+        }
+
+        .broadcast-set-total,
+        .broadcast-set-score {
+            flex: 0 0 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #d5d3dc;
+            color: #272433;
+            font-size: 1.2rem;
+            font-weight: 750;
+        }
+
+        .broadcast-set-total {
+            flex-basis: 48px;
+            background: #65599e;
+            color: #fff;
+        }
+
+        .score-column {
+            flex: 0 0 92px;
+            gap: 0;
+            background: #fff;
+        }
+
+        .score-value {
+            width: 100%;
+            height: 100%;
+            min-height: 62px;
+            border: 0;
+            border-radius: 0;
+            background: #fff;
+            color: #181820;
+            font-size: 2rem;
+            font-weight: 850;
+        }
+
+        .score-value:hover {
+            border: 0;
+            box-shadow: inset 0 0 0 2px #9284d5;
+        }
+
+        .score-controls {
+            display: none !important;
+        }
+
+        .team-row.winner .winner-badge {
+            flex: 0 0 auto;
+            margin-left: auto;
+            background: #4b3e83;
+            color: #fff;
+        }
+
+        .broadcast-serve-mark {
+            flex: 0 0 36px;
+            align-self: center;
+            width: 24px;
+            height: 24px;
+            margin: 0 7px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 32%, #b3e86d 0 18%, #76c542 19% 72%, #4e982e 73% 100%);
+            box-shadow: inset -2px -2px 0 rgba(31, 82, 20, 0.25);
+            visibility: hidden;
+        }
+
+        .team-row.serving .broadcast-serve-mark {
+            visibility: visible;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .header { padding: 9px 12px; }
+            .tournament-title { font-size: 1rem; }
+            .team-row { min-height: 54px; }
+            .team-name { padding: 0 8px; gap: 7px; font-size: 1rem; }
+            .team-logo, .team-logo-placeholder { flex-basis: 42px; width: 42px; height: 29px; }
+            .broadcast-set-total { flex-basis: 38px; font-size: 1rem; }
+            .broadcast-set-score { flex-basis: 38px; font-size: 1rem; }
+            .score-column { flex-basis: 62px; }
+            .score-value { min-height: 54px; font-size: 1.55rem; }
+            .broadcast-serve-mark { flex-basis: 25px; width: 19px; height: 19px; margin: 0 3px; }
+        }
     </style>
 </head>
 <body>
@@ -1100,8 +1290,11 @@
             // Build scoreboard
             let html = '';
             const numSets = gameState.team1.scores.length;
-
+            const currentSet = numSets - 1;
             const team1Won = checkWinner(1);
+            const team2Won = checkWinner(2);
+            const team1SetsWon = gameState.team1.scores.slice(0, currentSet).filter((score, index) => score > gameState.team2.scores[index]).length + (team1Won ? 1 : 0);
+            const team2SetsWon = gameState.team2.scores.slice(0, currentSet).filter((score, index) => score > gameState.team1.scores[index]).length + (team2Won ? 1 : 0);
             html += `<div class="team-row team1 ${gameState.serving === 1 ? 'serving' : ''} ${team1Won ? 'winner' : ''}">`;
             html += `<div class="team-name" onclick="editTeamName(1)">`;
             if (gameState.serving === 1) {
@@ -1113,21 +1306,19 @@
                 html += `<span class="winner-badge">WINNER</span>`;
             }
             html += `</div>`;
-            
-            for (let i = 0; i < numSets; i++) {
-                html += `
-                    <div class="score-column">
-                        <div class="score-value" onclick="addScore(1)">${gameState.team1.scores[i]}</div>
-                        <div class="score-controls">
-                            <button class="btn-add" onclick="addScore(1)">+</button>
-                            <button class="btn-remove" onclick="subtractScore(1)">−</button>
-                        </div>
-                    </div>
-                `;
+            html += `<div class="broadcast-set-total" aria-label="Sets won">${team1SetsWon}</div>`;
+            for (let i = 0; i < currentSet; i++) {
+                html += `<div class="broadcast-set-score" aria-label="Set ${i + 1}">${gameState.team1.scores[i]}</div>`;
             }
+            html += `<div class="score-column">
+                <div class="score-value" onclick="addScore(1)">${gameState.team1.scores[currentSet]}</div>
+                <div class="score-controls">
+                    <button class="btn-add" onclick="addScore(1)">+</button>
+                    <button class="btn-remove" onclick="subtractScore(1)">−</button>
+                </div>
+            </div><span class="broadcast-serve-mark" aria-label="Serving"></span>`;
             html += `</div>`;
 
-            const team2Won = checkWinner(2);
             html += `<div class="team-row team2 ${gameState.serving === 2 ? 'serving' : ''} ${team2Won ? 'winner' : ''}">`;
             html += `<div class="team-name" onclick="editTeamName(2)">`;
             if (gameState.serving === 2) {
@@ -1139,18 +1330,17 @@
                 html += `<span class="winner-badge">WINNER</span>`;
             }
             html += `</div>`;
-            
-            for (let i = 0; i < numSets; i++) {
-                html += `
-                    <div class="score-column">
-                        <div class="score-value" onclick="addScore(2)">${gameState.team2.scores[i]}</div>
-                        <div class="score-controls">
-                            <button class="btn-add" onclick="addScore(2)">+</button>
-                            <button class="btn-remove" onclick="subtractScore(2)">−</button>
-                        </div>
-                    </div>
-                `;
+            html += `<div class="broadcast-set-total" aria-label="Sets won">${team2SetsWon}</div>`;
+            for (let i = 0; i < currentSet; i++) {
+                html += `<div class="broadcast-set-score" aria-label="Set ${i + 1}">${gameState.team2.scores[i]}</div>`;
             }
+            html += `<div class="score-column">
+                <div class="score-value" onclick="addScore(2)">${gameState.team2.scores[currentSet]}</div>
+                <div class="score-controls">
+                    <button class="btn-add" onclick="addScore(2)">+</button>
+                    <button class="btn-remove" onclick="subtractScore(2)">−</button>
+                </div>
+            </div><span class="broadcast-serve-mark" aria-label="Serving"></span>`;
             html += `</div>`;
 
             document.getElementById('scoreboardContent').innerHTML = html;

@@ -6,26 +6,50 @@
   <title>OBS Full Scoreboard Overlay</title>
   <style>
     :root{
-      --header-bg:#2a4a3a; --accent:#4a9d6f; --bg:transparent; --text:#ffffff; --row-bg:#2d2d2d; --border:#444;
-      --team1-row:#2d2d2d; --team2-row:#2d2d2d;
+      --header-bg:#4b3e83; --accent:#78bf52; --bg:transparent; --text:#ffffff; --row-bg:#e7e7eb; --border:#444;
+      --team1-row:#e7e7eb; --team2-row:#e7e7eb;
     }
     html,body{height:100%;margin:0;background:transparent}
-    body{font-family:Arial,Helvetica,sans-serif;color:var(--text);background:transparent}
-    .container{width:100%;padding:20px;box-sizing:border-box}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .titles{display:flex;flex-direction:column}
-    .tournament-title{font-size:40px;font-weight:800;color:var(--text);letter-spacing:1px}
-    .tournament-subtitle{font-size:18px;color:#ddd}
-    .sets{display:flex;gap:10px;align-items:center}
-    .team-row{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:6px;margin-top:10px;background:var(--row-bg);border:1px solid rgba(0,0,0,0.2)}
-    .team-left{display:flex;align-items:center;gap:10px}
-    .team-logo{width:48px;height:48px;border-radius:50%;object-fit:cover}
-    .team-name{font-size:28px;font-weight:800}
-    .score-blocks{display:flex;gap:12px;align-items:center}
-    .score{min-width:96px;height:96px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;background:rgba(0,0,0,0.25);border-radius:8px;color:var(--accent);}
-    .serving{width:12px;height:12px;border-radius:50%;background:var(--accent);margin-right:8px}
-    .winner-badge{background:#FFD700;color:#000;padding:4px 8px;border-radius:4px;margin-left:8px;font-weight:700}
-    @media (max-width:800px){ .tournament-title{font-size:28px} .tournament-subtitle{font-size:14px} .team-name{font-size:20px} .score{min-width:64px;height:64px;font-size:22px} }
+    body{font-family:Arial,Helvetica,sans-serif;color:#181820;background:transparent}
+    .container{width:100%;max-width:980px;padding:8px;box-sizing:border-box}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--header-bg);border-bottom:3px solid #9284d5}
+    .titles{display:flex;flex:1 1 auto;min-width:0;flex-direction:column}
+    .tournament-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:20px;font-weight:800;color:#fff}
+    .tournament-subtitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#d8d4ef}
+    .sets,.score-blocks{display:flex;flex:0 0 auto;gap:3px;align-items:stretch}
+    .sets{align-self:stretch}
+    .column-title{display:flex;flex:0 0 42px;align-items:center;justify-content:center;color:#e8e5f5;font-size:9px;font-weight:800;text-align:center}
+    .column-title.live-label{flex-basis:76px}
+    .team-row{display:flex;align-items:stretch;min-height:56px;margin-top:4px;overflow:hidden;background:var(--row-bg);box-shadow:inset 0 -1px rgba(25,25,32,.12)}
+    .team-row.serving{box-shadow:inset 0 0 0 2px #78bf52}
+    .team-left{display:flex;flex:1 1 auto;min-width:0;align-items:center;gap:9px;padding:0 10px}
+    .team-logo{flex:0 0 48px;width:48px;height:32px;border:1px solid rgba(25,25,32,.18);border-radius:1px;object-fit:cover}
+    .team-initials{display:flex;flex:0 0 48px;width:48px;height:32px;align-items:center;justify-content:center;border:1px solid rgba(25,25,32,.18);background:#c7c3d8;color:#393052;font-size:12px;font-weight:800}
+    .team-name{overflow:hidden;color:#15151c;font-size:20px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
+    #ovServing1,#ovServing2{display:none}
+    .score-blocks{align-items:stretch}
+    .score-total,.score-set,.score-current{display:flex;flex:0 0 42px;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+    .score-total{background:#65599e;color:#fff}
+    .score-set{background:#d5d3dc;color:#272433}
+    .score-current{flex-basis:76px;background:#fff;color:#181820;font-size:26px}
+    .serve-indicator{display:flex;flex:0 0 34px;align-items:center;justify-content:center;background:#e7e7eb}
+    .serve-ball{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 32%,#b3e86d 0 18%,#76c542 19% 72%,#4e982e 73% 100%);box-shadow:inset -2px -2px 0 rgba(31,82,20,.25)}
+    @media (max-width:520px){
+      .container{padding:5px}
+      .header{gap:6px;padding:8px}
+      .tournament-title{font-size:14px}
+      .tournament-subtitle{font-size:10px}
+      .column-title{flex-basis:30px;font-size:8px}
+      .column-title.live-label{flex-basis:50px}
+      .team-row{min-height:46px}
+      .team-left{gap:6px;padding:0 6px}
+      .team-logo,.team-initials{flex-basis:38px;width:38px;height:26px}
+      .team-name{font-size:14px}
+      .score-total,.score-set{flex-basis:30px;font-size:15px}
+      .score-current{flex-basis:50px;font-size:20px}
+      .serve-indicator{flex-basis:25px}
+      .serve-ball{width:17px;height:17px}
+    }
   </style>
 </head>
 <body>
@@ -39,12 +63,12 @@
     </div>
 
     <div id="ovTeam1" class="team-row">
-      <div class="team-left"><div id="ovServing1" style="display:none" class="serving"></div><img id="ovLogo1" class="team-logo" src="" alt=""><div class="team-name" id="ovName1">TEAM 1</div></div>
+      <div class="team-left"><div id="ovServing1" class="serving"></div><img id="ovLogo1" class="team-logo" src="" alt=""><span id="ovInitials1" class="team-initials">T1</span><div class="team-name" id="ovName1">TEAM 1</div></div>
       <div class="score-blocks" id="ovScores1"></div>
     </div>
 
     <div id="ovTeam2" class="team-row">
-      <div class="team-left"><div id="ovServing2" style="display:none" class="serving"></div><img id="ovLogo2" class="team-logo" src="" alt=""><div class="team-name" id="ovName2">TEAM 2</div></div>
+      <div class="team-left"><div id="ovServing2" class="serving"></div><img id="ovLogo2" class="team-logo" src="" alt=""><span id="ovInitials2" class="team-initials">T2</span><div class="team-name" id="ovName2">TEAM 2</div></div>
       <div class="score-blocks" id="ovScores2"></div>
     </div>
   </div>
@@ -61,6 +85,8 @@
       name2: document.getElementById('ovName2'),
       logo1: document.getElementById('ovLogo1'),
       logo2: document.getElementById('ovLogo2'),
+      initials1: document.getElementById('ovInitials1'),
+      initials2: document.getElementById('ovInitials2'),
       scores1: document.getElementById('ovScores1'),
       scores2: document.getElementById('ovScores2'),
       serving1: document.getElementById('ovServing1'),
@@ -70,36 +96,78 @@
 
     // default state
     let state = {
-      settings: { tournamentTitle:'PICKLEBALL TOURNAMENT', tournamentSubtitle:'Championship Match', accentColor:'#4a9d6f', headerBg:'#2a4a3a', rowBg:'#2d2d2d', team1RowBg:'#2d2d2d', team2RowBg:'#2d2d2d' },
+      settings: { tournamentTitle:'PICKLEBALL TOURNAMENT', tournamentSubtitle:'Championship Match', accentColor:'#78bf52', headerBg:'#4b3e83', rowBg:'#e7e7eb', team1RowBg:'#e7e7eb', team2RowBg:'#e7e7eb', winningScore:11, deuceRule:'winBy2' },
       gameState: { team1:{name:'TEAM 1',scores:[0]}, team2:{name:'TEAM 2',scores:[0]}, serving:1 }
     };
 
     function render(){
-      document.documentElement.style.setProperty('--accent', state.settings.accentColor || '#4a9d6f');
-      document.documentElement.style.setProperty('--header-bg', state.settings.headerBg || '#2a4a3a');
-      document.documentElement.style.setProperty('--row-bg', state.settings.rowBg || '#2d2d2d');
+      document.documentElement.style.setProperty('--accent', '#78bf52');
+      document.documentElement.style.setProperty('--header-bg', '#4b3e83');
+      document.documentElement.style.setProperty('--row-bg', '#e7e7eb');
       ov.title.textContent = state.settings.tournamentTitle || '';
       ov.subtitle.textContent = state.settings.tournamentSubtitle || '';
       ov.name1.textContent = state.gameState.team1.name || '';
       ov.name2.textContent = state.gameState.team2.name || '';
       // logos
-      if(state.settings.team1Image) { ov.logo1.src = state.settings.team1Image; ov.logo1.style.display='block'; } else { ov.logo1.style.display='none'; }
-      if(state.settings.team2Image) { ov.logo2.src = state.settings.team2Image; ov.logo2.style.display='block'; } else { ov.logo2.style.display='none'; }
+      const team1Name = state.gameState.team1.name || '';
+      const team2Name = state.gameState.team2.name || '';
+      ov.initials1.textContent = team1Name.split(/\s+/).map(word => word[0] || '').join('').slice(0, 2).toUpperCase();
+      ov.initials2.textContent = team2Name.split(/\s+/).map(word => word[0] || '').join('').slice(0, 2).toUpperCase();
+      if(state.settings.team1Image) { ov.logo1.src = state.settings.team1Image; ov.logo1.style.display='block'; ov.initials1.style.display='none'; } else { ov.logo1.style.display='none'; ov.initials1.style.display='flex'; }
+      if(state.settings.team2Image) { ov.logo2.src = state.settings.team2Image; ov.logo2.style.display='block'; ov.initials2.style.display='none'; } else { ov.logo2.style.display='none'; ov.initials2.style.display='flex'; }
 
-      // set counts
-      const numSets = Math.max(state.gameState.team1.scores.length, state.gameState.team2.scores.length);
-      ov.sets.innerHTML = '';
-      for(let i=0;i<numSets;i++){ const s=document.createElement('div'); s.textContent=`Set ${i+1}`; s.style.padding='4px 8px'; s.style.background='rgba(0,0,0,0.25)'; s.style.borderRadius='4px'; ov.sets.appendChild(s); }
-
-      // scores blocks
-      ov.scores1.innerHTML=''; ov.scores2.innerHTML='';
-      for(let i=0;i<numSets;i++){
-        const a = document.createElement('div'); a.className='score'; a.textContent = state.gameState.team1.scores[i] ?? 0; ov.scores1.appendChild(a);
-        const b = document.createElement('div'); b.className='score'; b.textContent = state.gameState.team2.scores[i] ?? 0; ov.scores2.appendChild(b);
+      const scores1 = state.gameState.team1.scores || [0];
+      const scores2 = state.gameState.team2.scores || [0];
+      const currentSet = Math.max(scores1.length, scores2.length) - 1;
+      const team1WinsSet = (scoreA, scoreB) => state.settings.deuceRule === 'noDeuce'
+        ? scoreA >= Number(state.settings.winningScore || 11) && scoreA > scoreB
+        : scoreA >= Number(state.settings.winningScore || 11) && scoreA - scoreB >= 2;
+      let setWins1 = 0;
+      let setWins2 = 0;
+      for(let i = 0; i < currentSet; i++){
+        if((scores1[i] ?? 0) > (scores2[i] ?? 0)) setWins1++;
+        else if((scores2[i] ?? 0) > (scores1[i] ?? 0)) setWins2++;
       }
+      if(team1WinsSet(scores1[currentSet] ?? 0, scores2[currentSet] ?? 0)) setWins1++;
+      else if(team1WinsSet(scores2[currentSet] ?? 0, scores1[currentSet] ?? 0)) setWins2++;
 
-      // serving
-      if(state.gameState.serving === 1){ ov.serving1.style.display='block'; ov.serving2.style.display='none'; } else { ov.serving1.style.display='none'; ov.serving2.style.display='block'; }
+      ov.sets.innerHTML = '<div class="column-title">SETS</div>';
+      for(let i = 0; i < currentSet; i++){
+        const label = document.createElement('div');
+        label.className = 'column-title';
+        label.textContent = `SET ${i + 1}`;
+        ov.sets.appendChild(label);
+      }
+      const liveLabel = document.createElement('div');
+      liveLabel.className = 'column-title live-label';
+      liveLabel.textContent = 'LIVE';
+      ov.sets.appendChild(liveLabel);
+
+      const renderScores = (target, teamScores, setWins) => {
+        target.innerHTML = `<div class="score-total">${setWins}</div>`;
+        for(let i = 0; i < currentSet; i++){
+          const setScore = document.createElement('div');
+          setScore.className = 'score-set';
+          setScore.textContent = teamScores[i] ?? 0;
+          target.appendChild(setScore);
+        }
+        const currentScore = document.createElement('div');
+        currentScore.className = 'score-current';
+        currentScore.textContent = teamScores[currentSet] ?? 0;
+        target.appendChild(currentScore);
+        const serveIndicator = document.createElement('div');
+        serveIndicator.className = 'serve-indicator';
+        target.appendChild(serveIndicator);
+      };
+      renderScores(ov.scores1, scores1, setWins1);
+      renderScores(ov.scores2, scores2, setWins2);
+      ov.serving1.style.display = 'none';
+      ov.serving2.style.display = 'none';
+      const activeServe = state.gameState.serving === 1 ? ov.scores1 : ov.scores2;
+      const serveIndicator = activeServe.lastElementChild;
+      serveIndicator.innerHTML = '<span class="serve-ball"></span>';
+      (state.gameState.serving === 1 ? document.getElementById('ovTeam1') : document.getElementById('ovTeam2')).classList.add('serving');
+      (state.gameState.serving === 1 ? document.getElementById('ovTeam2') : document.getElementById('ovTeam1')).classList.remove('serving');
 
     }
 
